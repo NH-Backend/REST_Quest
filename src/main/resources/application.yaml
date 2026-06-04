@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: REST_Quest
+  datasource:
+    url: ${dbUrl}
+    username: ${dbUserName}
+    password: ${dbPassWord}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+
+custom:
+  baseUrl: ${baseUrl}
+  jwt:
+    secrets:
+      app-key: ${base64UuidKey}
+      vanilla-key: ${vanillaKey}
+  validations:
+    access: ${accessTokenTime}
+    refresh: ${refreshTokenTime}
