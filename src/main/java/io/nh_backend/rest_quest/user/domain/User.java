@@ -59,5 +59,8 @@ public class User{
         this.createdAt = LocalDateTime.now();
     }
 
+    public void recordLogin() {
+        this.lastLoginAt = LocalDateTime.now();
+    }
 
 }
