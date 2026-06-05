@@ -1,6 +1,8 @@
 spring:
   application:
     name: REST_Quest
+  config:
+    import: optional:file:.env.development[.properties]
   datasource:
     url: ${dbUrl}
     username: ${dbUserName}
