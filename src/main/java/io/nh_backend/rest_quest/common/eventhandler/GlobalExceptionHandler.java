@@ -23,20 +23,14 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.fail(exception.getMessage()));
     }
 
-//    @ExceptionHandler(BusinessException.class)
-//    public ResponseEntity<ApiResponse<Void>> handleResponseStatusException(
-//            ResponseStatusException exception
-//    ) {
-//        return ResponseEntity
-//                .status(
-//                        exception.getStatusCode()
-//                )
-//                .body(
-//                        ApiResponse.fail(
-//                                exception.getReason())
-//                );
-//    }
-
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<ApiResponse<Void>> handleResponseStatusException(
+            ResponseStatusException exception
+    ) {
+        return ResponseEntity
+                .status(exception.getStatusCode())
+                .body(ApiResponse.fail(exception.getReason()));
+    }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Void>> handleMethodArgumentNotValidException(

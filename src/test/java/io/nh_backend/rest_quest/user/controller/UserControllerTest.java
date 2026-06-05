@@ -1,7 +1,9 @@
 package io.nh_backend.rest_quest.user.controller;
 
+import io.nh_backend.rest_quest.common.constant.ErrorCode;
 import io.nh_backend.rest_quest.common.constant.SuccessCode;
 import io.nh_backend.rest_quest.common.eventhandler.GlobalExceptionHandler;
+import io.nh_backend.rest_quest.common.exception.BusinessException;
 import io.nh_backend.rest_quest.user.domain.Provider;
 import io.nh_backend.rest_quest.user.domain.Role;
 import io.nh_backend.rest_quest.user.domain.Status;
@@ -140,9 +142,8 @@ class UserControllerTest {
             );
 
             //when
-            when(userService.createUser(request)).thenThrow(new ResponseStatusException(
-                    HttpStatus.CONFLICT,
-                    "이미 사용 중인 이메일입니다."
+            when(userService.createUser(request)).thenThrow(new BusinessException(
+                    ErrorCode.UNVALID_EMAIL_ADDRESS
             ));
 
             mockMvc.perform(post("/api/v1/users/register")
@@ -247,9 +248,8 @@ class UserControllerTest {
             );
 
             //when
-            when(userService.login(request)).thenThrow(new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED,
-                    "이메일 또는 비밀번호가 올바르지 않습니다."
+            when(userService.login(request)).thenThrow(new BusinessException(
+                    ErrorCode.INVALID_LOGIN_INFORMATION
             ));
 
             mockMvc.perform(post("/api/v1/auth/login")
@@ -330,9 +330,8 @@ class UserControllerTest {
             String email = "hero@example.com";
 
             //when
-            when(userService.getMyAccount(email)).thenThrow(new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED,
-                    "인증이 필요합니다."
+            when(userService.getMyAccount(email)).thenThrow(new BusinessException(
+                    ErrorCode.UNAUTHORIZED_USER
             ));
 
             mockMvc.perform(get("/api/v1/users/me")
@@ -401,9 +400,8 @@ class UserControllerTest {
             RefreshTokenRequest request = new RefreshTokenRequest("invalid-refresh-token");
 
             //when
-            when(userService.refreshToken(request)).thenThrow(new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED,
-                    "유효하지 않은 Refresh Token입니다."
+            when(userService.refreshToken(request)).thenThrow(new BusinessException(
+                    ErrorCode.UNVALID_REFRESH_TOKEN
             ));
 
             mockMvc.perform(post("/api/v1/auth/refresh")

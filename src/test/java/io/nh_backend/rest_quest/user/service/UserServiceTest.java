@@ -1,13 +1,15 @@
 package io.nh_backend.rest_quest.user.service;
 
-import io.nh_backend.rest_quest.user.domain.Role;
+import io.nh_backend.rest_quest.common.constant.ErrorCode;
+import io.nh_backend.rest_quest.common.dto.KeyPair;
+import io.nh_backend.rest_quest.common.exception.BusinessException;
 import io.nh_backend.rest_quest.user.domain.RefreshToken;
 import io.nh_backend.rest_quest.user.domain.RefreshTokenStatus;
+import io.nh_backend.rest_quest.user.domain.Role;
 import io.nh_backend.rest_quest.user.domain.Status;
 import io.nh_backend.rest_quest.user.domain.User;
 import io.nh_backend.rest_quest.user.domain.UserProfile;
 import io.nh_backend.rest_quest.user.domain.Wallet;
-import io.nh_backend.rest_quest.common.dto.KeyPair;
 import io.nh_backend.rest_quest.user.dto.LoginRequest;
 import io.nh_backend.rest_quest.user.dto.LoginResponse;
 import io.nh_backend.rest_quest.user.dto.RefreshTokenBody;
@@ -24,11 +26,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -135,13 +135,10 @@ class UserServiceTest {
 
             when(userRepository.existsByEmail(request.email())).thenReturn(true);
 
-            assertThatThrownBy(() -> userService.createUser(request))
-                    .isInstanceOf(ResponseStatusException.class)
-                    .satisfies(exception -> {
-                        ResponseStatusException responseStatusException = (ResponseStatusException) exception;
-                        assertThat(responseStatusException.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
-                        assertThat(responseStatusException.getReason()).isEqualTo("이미 사용 중인 이메일입니다.");
-                    });
+            assertBusinessException(
+                    () -> userService.createUser(request),
+                    ErrorCode.UNVALID_EMAIL_ADDRESS
+            );
 
             verify(userRepository, never()).save(any(User.class));
             verify(userProfileRepository, never()).save(any(UserProfile.class));
@@ -219,10 +216,10 @@ class UserServiceTest {
             when(userRepository.findByEmail(request.email())).thenReturn(Optional.empty());
 
             //then
-            assertThatThrownBy(() -> userService.login(request))
-                    .isInstanceOf(ResponseStatusException.class)
-                    .extracting("statusCode")
-                    .isEqualTo(HttpStatus.UNAUTHORIZED);
+            assertBusinessException(
+                    () -> userService.login(request),
+                    ErrorCode.INVALID_LOGIN_INFORMATION
+            );
             verify(refreshTokenRepository, never()).save(any(RefreshToken.class));
         }
 
@@ -242,10 +239,10 @@ class UserServiceTest {
             when(userRepository.findByEmail(request.email())).thenReturn(Optional.of(user));
 
             //then
-            assertThatThrownBy(() -> userService.login(request))
-                    .isInstanceOf(ResponseStatusException.class)
-                    .extracting("statusCode")
-                    .isEqualTo(HttpStatus.UNAUTHORIZED);
+            assertBusinessException(
+                    () -> userService.login(request),
+                    ErrorCode.INVALID_LOGIN_INFORMATION
+            );
             assertThat(user.getLastLoginAt()).isNull();
             verify(refreshTokenRepository, never()).save(any(RefreshToken.class));
         }
@@ -305,13 +302,10 @@ class UserServiceTest {
             when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
 
             //then
-            assertThatThrownBy(() -> userService.getMyAccount(email))
-                    .isInstanceOf(ResponseStatusException.class)
-                    .satisfies(exception -> {
-                        ResponseStatusException responseStatusException = (ResponseStatusException) exception;
-                        assertThat(responseStatusException.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
-                        assertThat(responseStatusException.getReason()).isEqualTo("인증이 필요합니다.");
-                    });
+            assertBusinessException(
+                    () -> userService.getMyAccount(email),
+                    ErrorCode.UNAUTHORIZED_USER
+            );
         }
     }
 
@@ -398,15 +392,22 @@ class UserServiceTest {
             )).thenReturn(Optional.empty());
 
             //then
-            assertThatThrownBy(() -> userService.refreshToken(request))
-                    .isInstanceOf(ResponseStatusException.class)
-                    .satisfies(exception -> {
-                        ResponseStatusException responseStatusException = (ResponseStatusException) exception;
-                        assertThat(responseStatusException.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
-                        assertThat(responseStatusException.getReason()).isEqualTo("유효하지 않은 Refresh Token입니다.");
-                    });
+            assertBusinessException(
+                    () -> userService.refreshToken(request),
+                    ErrorCode.UNVALID_REFRESH_TOKEN
+            );
             verify(refreshTokenRepository, never()).save(any(RefreshToken.class));
         }
+    }
+
+    private static void assertBusinessException(Runnable action, ErrorCode expectedErrorCode) {
+        assertThatThrownBy(action::run)
+                .isInstanceOf(BusinessException.class)
+                .satisfies(exception -> {
+                    BusinessException businessException = (BusinessException) exception;
+                    assertThat(businessException.getErrorCode()).isEqualTo(expectedErrorCode);
+                    assertThat(businessException.getMessage()).isEqualTo(expectedErrorCode.getDescription());
+                });
     }
 
 }
