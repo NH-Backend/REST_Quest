@@ -1,6 +1,8 @@
-package io.nh_backend.rest_quest.common.exception;
+package io.nh_backend.rest_quest.common.eventhandler;
 
+import io.nh_backend.rest_quest.common.constant.ErrorCode;
 import io.nh_backend.rest_quest.common.dto.ApiResponse;
+import io.nh_backend.rest_quest.common.exception.BusinessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -12,19 +14,29 @@ import org.springframework.web.server.ResponseStatusException;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(ResponseStatusException.class)
-    public ResponseEntity<ApiResponse<Void>> handleResponseStatusException(
-            ResponseStatusException exception
-    ) {
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<ApiResponse<Void>> handleBusinessException(BusinessException exception) {
+        ErrorCode code = exception.getErrorCode();
+
         return ResponseEntity
-                .status(
-                        exception.getStatusCode()
-                )
-                .body(
-                        ApiResponse.fail(
-                                exception.getReason())
-                );
+                .status(code.getStatus())
+                .body(ApiResponse.fail(exception.getMessage()));
     }
+
+//    @ExceptionHandler(BusinessException.class)
+//    public ResponseEntity<ApiResponse<Void>> handleResponseStatusException(
+//            ResponseStatusException exception
+//    ) {
+//        return ResponseEntity
+//                .status(
+//                        exception.getStatusCode()
+//                )
+//                .body(
+//                        ApiResponse.fail(
+//                                exception.getReason())
+//                );
+//    }
+
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Void>> handleMethodArgumentNotValidException(

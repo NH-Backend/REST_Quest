@@ -4,13 +4,12 @@ spring:
   config:
     import: optional:file:.env.development[.properties]
   datasource:
-    url: ${dbUrl}
-    username: ${dbUserName}
-    password: ${dbPassWord}
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${dbUrl:jdbc:h2:mem:rest-quest;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE}
+    username: ${dbUserName:sa}
+    password: ${dbPassWord:}
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: update
 
 custom:
   baseUrl: ${baseUrl:http://localhost:8080}
@@ -24,5 +23,5 @@ custom:
       app-key: ${base64UuidKey:cmVzdC1xdWVzdC1qd3Qtc2VjcmV0LWtleS1tdXN0LWJlLWxvbmc=}
       vanilla-key: ${vanillaKey:REST_Quest}
     validations:
-      access: ${accessTokenTime:3600}
+      access: ${accessTokenTime:900}
       refresh: ${refreshTokenTime:1209600}

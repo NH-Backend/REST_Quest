@@ -1,6 +1,8 @@
 package io.nh_backend.rest_quest.user.service;
 
 import io.jsonwebtoken.JwtException;
+import io.nh_backend.rest_quest.common.constant.ErrorCode;
+import io.nh_backend.rest_quest.common.exception.BusinessException;
 import io.nh_backend.rest_quest.user.domain.Role;
 import io.nh_backend.rest_quest.user.domain.RefreshToken;
 import io.nh_backend.rest_quest.user.domain.RefreshTokenStatus;
@@ -43,7 +45,7 @@ public class UserService {
     @Transactional
     public UserResponse createUser(UseCreateRequest request) {
         if (userRepository.existsByEmail(request.email())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 사용 중인 이메일입니다.");
+            throw new BusinessException(ErrorCode.UNVALID_EMAIL_ADDRESS);
         }
 
         User user = User.builder()
@@ -68,15 +70,13 @@ public class UserService {
     @Transactional
     public LoginResponse login(LoginRequest request) {
         User user = userRepository.findByEmail(request.email())
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.UNAUTHORIZED,
-                        "이메일 또는 비밀번호가 올바르지 않습니다."
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.INVALID_LOGIN_INFORMATION
                 ));
 
         if (!passwordEncoder.matches(request.password(), user.getPassword())) {
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED,
-                    "이메일 또는 비밀번호가 올바르지 않습니다."
+            throw new BusinessException(
+                    ErrorCode.INVALID_LOGIN_INFORMATION
             );
         }
 
@@ -103,9 +103,8 @@ public class UserService {
     @Transactional(readOnly = true)
     public UserResponse getMyAccount(String email) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.UNAUTHORIZED,
-                        "인증이 필요합니다."
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.UNAUTHORIZED_USER
                 ));
 
         return toResponse(user);
@@ -152,10 +151,9 @@ public class UserService {
         }
     }
 
-    private ResponseStatusException invalidRefreshTokenException() {
-        return new ResponseStatusException(
-                HttpStatus.UNAUTHORIZED,
-                "유효하지 않은 Refresh Token입니다."
+    private BusinessException invalidRefreshTokenException() {
+        return new BusinessException(
+                ErrorCode.UNVALID_REFRESH_TOKEN
         );
     }
 

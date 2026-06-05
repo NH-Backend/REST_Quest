@@ -1,7 +1,7 @@
 package io.nh_backend.rest_quest.user.controller;
 
 import io.nh_backend.rest_quest.common.constant.SuccessCode;
-import io.nh_backend.rest_quest.common.exception.GlobalExceptionHandler;
+import io.nh_backend.rest_quest.common.eventhandler.GlobalExceptionHandler;
 import io.nh_backend.rest_quest.user.domain.Provider;
 import io.nh_backend.rest_quest.user.domain.Role;
 import io.nh_backend.rest_quest.user.domain.Status;
