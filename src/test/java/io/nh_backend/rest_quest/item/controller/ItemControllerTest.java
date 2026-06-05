@@ -5,6 +5,7 @@ import io.nh_backend.rest_quest.common.constant.SuccessCode;
 import io.nh_backend.rest_quest.common.exception.BusinessException;
 import io.nh_backend.rest_quest.item.dto.ItemResponse;
 import io.nh_backend.rest_quest.item.service.ItemService;
+import io.nh_backend.rest_quest.user.service.JwtProvider;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -26,10 +27,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(ItemController.class)
+@AutoConfigureMockMvc(addFilters = false)
 @DisplayName("ItemController 클래스의")
 class ItemControllerTest {
     @Autowired
     private MockMvc mockMvc;
+
+    @MockitoBean
+    private JwtProvider jwtProvider;
 
     @MockitoBean
     private ItemService itemService;

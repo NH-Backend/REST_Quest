@@ -1,5 +1,4 @@
 package io.nh_backend.rest_quest.common.exception;
-
 import io.nh_backend.rest_quest.common.constant.ErrorCode;
 
 public class BusinessException extends RuntimeException {

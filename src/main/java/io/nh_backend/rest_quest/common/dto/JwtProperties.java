@@ -17,13 +17,13 @@ public class JwtProperties {
         private final String issuer;
         private final String subjectAccessToken;
         private final String subjectRefreshToken;
-        private final String audiance;
+        private final String audience;
     }
     @Getter
     @RequiredArgsConstructor
     public static class Secrets{
         private final String appKey;
-        private final String vanillakey;
+        private final String vanillaKey;
     }
     @Getter
     @RequiredArgsConstructor

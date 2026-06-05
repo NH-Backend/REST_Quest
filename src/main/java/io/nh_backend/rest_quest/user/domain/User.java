@@ -37,6 +37,7 @@ public class User{
     @Column(nullable = false)
     private Status status;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private Provider provider;
 
@@ -53,10 +54,13 @@ public class User{
         this.password = password;
         this.nickname = nickname;
         this.role = role;
-        this.status = Status.INACTIVE;
+        this.status = Status.ACTIVE;
         this.provider = Provider.LOCAL;
         this.createdAt = LocalDateTime.now();
     }
 
+    public void recordLogin() {
+        this.lastLoginAt = LocalDateTime.now();
+    }
 
 }
