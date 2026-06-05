@@ -7,7 +7,6 @@ public record ApiResponse<T>(
 ) {
 
     public static <T> ApiResponse<T> ok(T data, String successMessage) {
-
         return new ApiResponse<>(
                 true,
                 successMessage,
@@ -23,18 +22,14 @@ public record ApiResponse<T>(
     }
 
     public static ApiResponse<Void> ok() {
-
-        return ok(null,"");
+        return ok(null, "");
     }
 
-
-    public static<T> ApiResponse<T> fail(String errorMessage) {
+    public static <T> ApiResponse<T> fail(String errorMessage) {
         return new ApiResponse<>(
                 false,
                 errorMessage,
                 null
         );
     }
-
-
 }

@@ -32,13 +32,13 @@ public class Item {
     private Integer sellPrice;
 
     @Column(nullable = false)
-    private Integer expCoupon;
+    private Integer expCoupon=0;
 
     @Column(nullable = false)
-    private Integer gemCoupon;
+    private Integer gemCoupon=0;
 
     @Column(nullable = false)
-    private Integer goldCoupon;
+    private Integer goldCoupon=0;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -51,6 +51,7 @@ public class Item {
     @Builder
     public Item(String itemName, String rId, String description,
                 Integer goldPrice, Integer gemPrice,Integer sellPrice,
+                Integer expCoupon, Integer gemCoupon, Integer goldCoupon,
                 ItemType itemType, ItemGrade itemGrade) {
         this.itemName = itemName;
         this.rId = rId;
@@ -58,6 +59,9 @@ public class Item {
         this.goldPrice = goldPrice;
         this.gemPrice = gemPrice;
         this.sellPrice = sellPrice;
+        this.expCoupon = expCoupon;
+        this.gemCoupon = gemCoupon;
+        this.goldCoupon = goldCoupon;
         this.itemType = itemType;
         this.itemGrade = itemGrade;
     }
