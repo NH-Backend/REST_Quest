@@ -143,6 +143,28 @@ public class UserService {
         );
     }
 
+    @Transactional
+    public void logout(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.UNAUTHORIZED_USER
+                ));
+
+        refreshTokenRepository.deleteAll(
+                refreshTokenRepository.findAllByUserAndStatus(user, RefreshTokenStatus.ACTIVE)
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public boolean isLoggedIn(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.UNAUTHORIZED_USER
+                ));
+
+        return refreshTokenRepository.existsByUserAndStatus(user, RefreshTokenStatus.ACTIVE);
+    }
+
     private RefreshTokenBody parseRefreshToken(String refreshToken) {
         try {
             return jwtProvider.parseRefreshToken(refreshToken);

@@ -28,6 +28,8 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDateTime;
 
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -335,6 +337,70 @@ class UserControllerTest {
             ));
 
             mockMvc.perform(get("/api/v1/users/me")
+                            .principal(() -> email))
+            //then
+                    .andExpect(status().isUnauthorized())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.message").value("인증이 필요합니다."))
+                    .andExpect(jsonPath("$.data").doesNotExist())
+                    .andExpect(jsonPath("$.error").doesNotExist());
+        }
+    }
+
+    @DisplayName("로그아웃")
+    class 로그아웃_테스트 {
+        @BeforeEach
+        void setUp() {
+            userService = mock(UserService.class);
+
+            LocalValidatorFactoryBean validator = new LocalValidatorFactoryBean();
+            validator.afterPropertiesSet();
+
+            mockMvc = MockMvcBuilders
+                    .standaloneSetup(new UserController(userService))
+                    .setControllerAdvice(new GlobalExceptionHandler())
+                    .setValidator(validator)
+                    .build();
+        }
+
+        @Test
+        @DisplayName("INF_UNITY_004: 서버 측 Refresh Token을 삭제하고 로그아웃한다")
+        void logout_deletesRefreshTokenAndReturnsSuccess() throws Exception {
+            //given
+            String email = "hero@example.com";
+
+            mockMvc.perform(post("/api/v1/auth/logout")
+                            .principal(() -> email))
+            //then
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.message").value(SuccessCode.USER_LOGOUT.getSuccessMessage()))
+                    .andExpect(jsonPath("$.data").isEmpty())
+                    .andExpect(jsonPath("$.error").doesNotExist());
+
+            verify(userService).logout(email);
+        }
+
+        @Test
+        @DisplayName("인증되지 않은 사용자는 로그아웃할 수 없다")
+        void logout_returnsUnauthorizedWhenPrincipalDoesNotExist() throws Exception {
+            mockMvc.perform(post("/api/v1/auth/logout"))
+            //then
+                    .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        @DisplayName("인증 사용자를 찾을 수 없으면 Unauthorized 응답을 반환한다")
+        void logout_returnsUnauthorizedWhenUserDoesNotExist() throws Exception {
+            //given
+            String email = "hero@example.com";
+
+            //when
+            doThrow(new BusinessException(
+                    ErrorCode.UNAUTHORIZED_USER
+            )).when(userService).logout(email);
+
+            mockMvc.perform(post("/api/v1/auth/logout")
                             .principal(() -> email))
             //then
                     .andExpect(status().isUnauthorized())
