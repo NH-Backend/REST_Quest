@@ -3,17 +3,14 @@ package io.nh_backend.rest_quest.common.dto;
 public record ApiResponse<T>(
         boolean success,
         String message,
-        T data,
-        ErrorBody error
+        T data
 ) {
 
     public static <T> ApiResponse<T> ok(T data, String successMessage) {
-
         return new ApiResponse<>(
                 true,
                 successMessage,
-                data,
-                null
+                data
         );
     }
 
@@ -25,19 +22,14 @@ public record ApiResponse<T>(
     }
 
     public static ApiResponse<Void> ok() {
-
-        return ok(null,"");
+        return ok(null, "");
     }
 
-    public static ApiResponse<Void> fail(String code, String errorMessage) {
+    public static <T> ApiResponse<T> fail(String errorMessage) {
         return new ApiResponse<>(
                 false,
-                "해당 요청이 실패되었습니다." ,
-                null,
-                new ErrorBody(code, errorMessage)
+                errorMessage,
+                null
         );
-    }
-
-    public record ErrorBody(String code, String message) {
     }
 }
