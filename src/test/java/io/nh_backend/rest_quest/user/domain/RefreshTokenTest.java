@@ -40,8 +40,8 @@ class RefreshTokenTest {
         }
 
         @Test
-        @DisplayName("로그아웃 시 LOGGED_OUT 상태가 된다")
-        void logout_changesStatusToLoggedOut() {
+        @DisplayName("로그아웃 시 INACTIVE 상태가 된다")
+        void logout_changesStatusToInactive() {
             //given
             RefreshToken refreshToken = RefreshToken.builder()
                     .refreshToken("refresh-token")
@@ -58,14 +58,13 @@ class RefreshTokenTest {
             refreshToken.logout();
 
             //then
-            assertThat(refreshToken.getStatus()).isEqualTo(RefreshTokenStatus.LOGGED_OUT);
+            assertThat(refreshToken.getStatus()).isEqualTo(RefreshTokenStatus.INACTIVE);
             assertThat(refreshToken.isActive()).isFalse();
-            assertThat(refreshToken.getLoggedOutAt()).isNotNull();
         }
 
         @Test
-        @DisplayName("토큰 회전 시 새 refresh token 값으로 갱신된다")
-        void rotate_updatesRefreshTokenValue() {
+        @DisplayName("토큰 회전 시 기존 토큰은 INACTIVE가 되고 새 refresh token이 생성된다")
+        void rotate_inactivatesCurrentTokenAndCreatesNewRefreshToken() {
             //given
             RefreshToken refreshToken = RefreshToken.builder()
                     .refreshToken("old-refresh-token")
@@ -77,18 +76,19 @@ class RefreshTokenTest {
                             .role(Role.USER)
                             .build())
                     .build();
-            refreshToken.logout();
 
             LocalDateTime newRefreshExpiredAt = LocalDateTime.now().plusDays(30);
 
             //when
-            refreshToken.rotate("new-refresh-token", newRefreshExpiredAt);
+            RefreshToken rotatedRefreshToken = refreshToken.rotate("new-refresh-token", newRefreshExpiredAt);
 
             //then
-            assertThat(refreshToken.getRefreshToken()).isEqualTo("new-refresh-token");
-            assertThat(refreshToken.getRefreshTokenExpiredAt()).isEqualTo(newRefreshExpiredAt);
-            assertThat(refreshToken.getStatus()).isEqualTo(RefreshTokenStatus.ACTIVE);
-            assertThat(refreshToken.getLoggedOutAt()).isNull();
+            assertThat(refreshToken.getRefreshToken()).isEqualTo("old-refresh-token");
+            assertThat(refreshToken.getStatus()).isEqualTo(RefreshTokenStatus.INACTIVE);
+            assertThat(rotatedRefreshToken.getRefreshToken()).isEqualTo("new-refresh-token");
+            assertThat(rotatedRefreshToken.getRefreshTokenExpiredAt()).isEqualTo(newRefreshExpiredAt);
+            assertThat(rotatedRefreshToken.getStatus()).isEqualTo(RefreshTokenStatus.ACTIVE);
+            assertThat(rotatedRefreshToken.getUser()).isSameAs(refreshToken.getUser());
         }
     }
 }

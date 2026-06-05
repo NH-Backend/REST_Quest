@@ -38,6 +38,15 @@ public record ApiResponse<T>(
         );
     }
 
+    public static ApiResponse<Void> fail(String errorMessage) {
+        return new ApiResponse<>(
+                false,
+                errorMessage,
+                null,
+                null
+        );
+    }
+
     public record ErrorBody(String code, String message) {
     }
 }

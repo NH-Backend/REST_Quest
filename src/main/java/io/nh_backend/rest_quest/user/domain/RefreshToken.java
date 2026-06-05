@@ -8,7 +8,6 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -21,12 +20,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @Entity
-@Table(
-        name = "refresh_token",
-        indexes = {
-                @Index(name = "idx_refresh_token_token", columnList = "refreshToken")
-        }
-)
+@Table(name = "refresh_token")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class RefreshToken {
 
@@ -34,7 +28,7 @@ public class RefreshToken {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 1000)
+    @Column(nullable = false, unique = true, length = 512)
     private String refreshToken;
 
     @Column(nullable = false)
@@ -46,8 +40,6 @@ public class RefreshToken {
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
-
-    private LocalDateTime loggedOutAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -71,18 +63,20 @@ public class RefreshToken {
     }
 
     public void logout() {
-        this.status = RefreshTokenStatus.LOGGED_OUT;
-        this.loggedOutAt = LocalDateTime.now();
+        this.status = RefreshTokenStatus.INACTIVE;
     }
 
     public void expire() {
-        this.status = RefreshTokenStatus.EXPIRED;
+        this.status = RefreshTokenStatus.INACTIVE;
     }
 
-    public void rotate(String refreshToken, LocalDateTime refreshTokenExpiredAt) {
-        this.refreshToken = refreshToken;
-        this.refreshTokenExpiredAt = refreshTokenExpiredAt;
-        this.status = RefreshTokenStatus.ACTIVE;
-        this.loggedOutAt = null;
+    public RefreshToken rotate(String refreshToken, LocalDateTime refreshTokenExpiredAt) {
+        expire();
+
+        return RefreshToken.builder()
+                .refreshToken(refreshToken)
+                .refreshTokenExpiredAt(refreshTokenExpiredAt)
+                .user(user)
+                .build();
     }
 }

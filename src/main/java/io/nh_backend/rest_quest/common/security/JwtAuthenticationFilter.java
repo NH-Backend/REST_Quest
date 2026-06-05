@@ -91,6 +91,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     "message": "%s"
                   }
                 }
-                """.formatted(errorCode.name(), errorCode.getDescription()));
+                """.formatted(errorCode.name(), errorCode.getDescription())
+        );
     }
 }

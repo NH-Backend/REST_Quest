@@ -1,13 +1,18 @@
 package io.nh_backend.rest_quest.user.service;
 
+import io.jsonwebtoken.JwtException;
 import io.nh_backend.rest_quest.user.domain.Role;
 import io.nh_backend.rest_quest.user.domain.RefreshToken;
+import io.nh_backend.rest_quest.user.domain.RefreshTokenStatus;
 import io.nh_backend.rest_quest.user.domain.User;
 import io.nh_backend.rest_quest.user.domain.UserProfile;
 import io.nh_backend.rest_quest.user.domain.Wallet;
 import io.nh_backend.rest_quest.user.dto.AccessTokenBody;
 import io.nh_backend.rest_quest.user.dto.LoginRequest;
 import io.nh_backend.rest_quest.user.dto.LoginResponse;
+import io.nh_backend.rest_quest.user.dto.RefreshTokenBody;
+import io.nh_backend.rest_quest.user.dto.RefreshTokenRequest;
+import io.nh_backend.rest_quest.user.dto.RefreshTokenRotation;
 import io.nh_backend.rest_quest.user.dto.UseCreateRequest;
 import io.nh_backend.rest_quest.user.dto.UserResponse;
 import io.nh_backend.rest_quest.common.dto.KeyPair;
@@ -38,7 +43,7 @@ public class UserService {
     @Transactional
     public UserResponse createUser(UseCreateRequest request) {
         if (userRepository.existsByEmail(request.email())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 가입된 이메일입니다.");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 사용 중인 이메일입니다.");
         }
 
         User user = User.builder()
@@ -92,6 +97,65 @@ public class UserService {
                 keyPair.accessToken(),
                 keyPair.refreshToken(),
                 jwtProvider.getAccessTokenExpiresInSeconds()
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public UserResponse getMyAccount(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.UNAUTHORIZED,
+                        "인증이 필요합니다."
+                ));
+
+        return toResponse(user);
+    }
+
+    @Transactional
+    public RefreshTokenRotation refreshToken(RefreshTokenRequest request) {
+        RefreshTokenBody refreshTokenBody = parseRefreshToken(request.refreshToken());
+        RefreshToken savedRefreshToken = refreshTokenRepository
+                .findByRefreshTokenAndStatus(request.refreshToken(), RefreshTokenStatus.ACTIVE)
+                .orElseThrow(this::invalidRefreshTokenException);
+
+        if (savedRefreshToken.getRefreshTokenExpiredAt().isBefore(LocalDateTime.now())) {
+            savedRefreshToken.expire();
+            throw invalidRefreshTokenException();
+        }
+
+        User user = savedRefreshToken.getUser();
+        if (!user.getEmail().equals(refreshTokenBody.email())) {
+            throw invalidRefreshTokenException();
+        }
+
+        KeyPair keyPair = jwtProvider.createTokenPair(
+                new AccessTokenBody(user.getEmail(), user.getRole())
+        );
+        RefreshToken rotatedRefreshToken = savedRefreshToken.rotate(
+                keyPair.refreshToken(),
+                LocalDateTime.now().plusSeconds(jwtProvider.getRefreshTokenExpiresInSeconds())
+        );
+        refreshTokenRepository.save(rotatedRefreshToken);
+
+        return new RefreshTokenRotation(
+                keyPair.accessToken(),
+                keyPair.refreshToken(),
+                jwtProvider.getAccessTokenExpiresInSeconds()
+        );
+    }
+
+    private RefreshTokenBody parseRefreshToken(String refreshToken) {
+        try {
+            return jwtProvider.parseRefreshToken(refreshToken);
+        } catch (JwtException | IllegalArgumentException exception) {
+            throw invalidRefreshTokenException();
+        }
+    }
+
+    private ResponseStatusException invalidRefreshTokenException() {
+        return new ResponseStatusException(
+                HttpStatus.UNAUTHORIZED,
+                "유효하지 않은 Refresh Token입니다."
         );
     }
 

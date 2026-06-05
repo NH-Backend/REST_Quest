@@ -2,6 +2,7 @@ package io.nh_backend.rest_quest.user.service;
 
 import io.nh_backend.rest_quest.user.domain.Role;
 import io.nh_backend.rest_quest.user.domain.RefreshToken;
+import io.nh_backend.rest_quest.user.domain.RefreshTokenStatus;
 import io.nh_backend.rest_quest.user.domain.Status;
 import io.nh_backend.rest_quest.user.domain.User;
 import io.nh_backend.rest_quest.user.domain.UserProfile;
@@ -9,6 +10,9 @@ import io.nh_backend.rest_quest.user.domain.Wallet;
 import io.nh_backend.rest_quest.common.dto.KeyPair;
 import io.nh_backend.rest_quest.user.dto.LoginRequest;
 import io.nh_backend.rest_quest.user.dto.LoginResponse;
+import io.nh_backend.rest_quest.user.dto.RefreshTokenBody;
+import io.nh_backend.rest_quest.user.dto.RefreshTokenRequest;
+import io.nh_backend.rest_quest.user.dto.RefreshTokenRotation;
 import io.nh_backend.rest_quest.user.dto.UseCreateRequest;
 import io.nh_backend.rest_quest.user.dto.UserResponse;
 import io.nh_backend.rest_quest.user.repository.RefreshTokenRepository;
@@ -133,8 +137,11 @@ class UserServiceTest {
 
             assertThatThrownBy(() -> userService.createUser(request))
                     .isInstanceOf(ResponseStatusException.class)
-                    .extracting("statusCode")
-                    .isEqualTo(HttpStatus.CONFLICT);
+                    .satisfies(exception -> {
+                        ResponseStatusException responseStatusException = (ResponseStatusException) exception;
+                        assertThat(responseStatusException.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+                        assertThat(responseStatusException.getReason()).isEqualTo("이미 사용 중인 이메일입니다.");
+                    });
 
             verify(userRepository, never()).save(any(User.class));
             verify(userProfileRepository, never()).save(any(UserProfile.class));
@@ -240,6 +247,164 @@ class UserServiceTest {
                     .extracting("statusCode")
                     .isEqualTo(HttpStatus.UNAUTHORIZED);
             assertThat(user.getLastLoginAt()).isNull();
+            verify(refreshTokenRepository, never()).save(any(RefreshToken.class));
+        }
+    }
+
+    @Nested
+    @DisplayName("내 계정 정보 조회")
+    class 내_계정_정보_조회_테스트 {
+        @BeforeEach
+        void setUp() {
+            userRepository = mock(UserRepository.class);
+            userProfileRepository = mock(UserProfileRepository.class);
+            walletRepository = mock(WalletRepository.class);
+            refreshTokenRepository = mock(RefreshTokenRepository.class);
+            jwtProvider = mock(JwtProvider.class);
+            passwordEncoder = new BCryptPasswordEncoder();
+            userService = new UserService(
+                    userRepository,
+                    userProfileRepository,
+                    walletRepository,
+                    refreshTokenRepository,
+                    jwtProvider,
+                    passwordEncoder
+            );
+        }
+
+        @Test
+        @DisplayName("이메일로 현재 사용자의 계정 정보를 조회한다")
+        void getMyAccount_returnsUserResponse() {
+            //given
+            User user = User.builder()
+                    .email("hero@example.com")
+                    .password("encoded-password")
+                    .nickname("hero")
+                    .role(Role.USER)
+                    .build();
+
+            //when
+            when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
+
+            UserResponse response = userService.getMyAccount(user.getEmail());
+
+            //then
+            assertThat(response.email()).isEqualTo(user.getEmail());
+            assertThat(response.nickname()).isEqualTo(user.getNickname());
+            assertThat(response.role()).isEqualTo(Role.USER);
+            assertThat(response.status()).isEqualTo(Status.ACTIVE);
+        }
+
+        @Test
+        @DisplayName("인증 사용자를 찾을 수 없으면 Unauthorized 예외가 발생한다")
+        void getMyAccount_throwsUnauthorizedWhenUserDoesNotExist() {
+            //given
+            String email = "unknown@example.com";
+
+            //when
+            when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
+
+            //then
+            assertThatThrownBy(() -> userService.getMyAccount(email))
+                    .isInstanceOf(ResponseStatusException.class)
+                    .satisfies(exception -> {
+                        ResponseStatusException responseStatusException = (ResponseStatusException) exception;
+                        assertThat(responseStatusException.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+                        assertThat(responseStatusException.getReason()).isEqualTo("인증이 필요합니다.");
+                    });
+        }
+    }
+
+    @Nested
+    @DisplayName("토큰 갱신")
+    class 토큰_갱신_테스트 {
+        @BeforeEach
+        void setUp() {
+            userRepository = mock(UserRepository.class);
+            userProfileRepository = mock(UserProfileRepository.class);
+            walletRepository = mock(WalletRepository.class);
+            refreshTokenRepository = mock(RefreshTokenRepository.class);
+            jwtProvider = mock(JwtProvider.class);
+            passwordEncoder = new BCryptPasswordEncoder();
+            userService = new UserService(
+                    userRepository,
+                    userProfileRepository,
+                    walletRepository,
+                    refreshTokenRepository,
+                    jwtProvider,
+                    passwordEncoder
+            );
+        }
+
+        @Test
+        @DisplayName("Refresh Token을 회전하고 새 토큰을 반환한다")
+        void refreshToken_rotatesRefreshTokenAndReturnsNewTokens() {
+            //given
+            RefreshTokenRequest request = new RefreshTokenRequest("old-refresh-token");
+            User user = User.builder()
+                    .email("hero@example.com")
+                    .password("encoded-password")
+                    .nickname("hero")
+                    .role(Role.USER)
+                    .build();
+            RefreshToken savedRefreshToken = RefreshToken.builder()
+                    .refreshToken(request.refreshToken())
+                    .refreshTokenExpiredAt(LocalDateTime.now().plusDays(14))
+                    .user(user)
+                    .build();
+
+            //when
+            when(jwtProvider.parseRefreshToken(request.refreshToken()))
+                    .thenReturn(new RefreshTokenBody(user.getEmail()));
+            when(refreshTokenRepository.findByRefreshTokenAndStatus(
+                    request.refreshToken(),
+                    RefreshTokenStatus.ACTIVE
+            )).thenReturn(Optional.of(savedRefreshToken));
+            when(jwtProvider.createTokenPair(argThat(body ->
+                    body.email().equals(user.getEmail()) && body.role() == Role.USER
+            ))).thenReturn(new KeyPair("new-access-token", "new-refresh-token"));
+            when(jwtProvider.getRefreshTokenExpiresInSeconds()).thenReturn(1209600L);
+            when(jwtProvider.getAccessTokenExpiresInSeconds()).thenReturn(900L);
+
+            RefreshTokenRotation response = userService.refreshToken(request);
+
+            //then
+            assertThat(savedRefreshToken.isActive()).isFalse();
+            assertThat(response.accessToken()).isEqualTo("new-access-token");
+            assertThat(response.refreshToken()).isEqualTo("new-refresh-token");
+            assertThat(response.accessExpiresInSeconds()).isEqualTo(900L);
+
+            ArgumentCaptor<RefreshToken> refreshTokenCaptor = ArgumentCaptor.forClass(RefreshToken.class);
+            verify(refreshTokenRepository).save(refreshTokenCaptor.capture());
+
+            RefreshToken rotatedRefreshToken = refreshTokenCaptor.getValue();
+            assertThat(rotatedRefreshToken.getRefreshToken()).isEqualTo("new-refresh-token");
+            assertThat(rotatedRefreshToken.getUser()).isSameAs(user);
+            assertThat(rotatedRefreshToken.isActive()).isTrue();
+        }
+
+        @Test
+        @DisplayName("Refresh Token이 저장소에 없으면 Unauthorized 예외가 발생한다")
+        void refreshToken_throwsUnauthorizedWhenRefreshTokenDoesNotExist() {
+            //given
+            RefreshTokenRequest request = new RefreshTokenRequest("invalid-refresh-token");
+
+            //when
+            when(jwtProvider.parseRefreshToken(request.refreshToken()))
+                    .thenReturn(new RefreshTokenBody("hero@example.com"));
+            when(refreshTokenRepository.findByRefreshTokenAndStatus(
+                    request.refreshToken(),
+                    RefreshTokenStatus.ACTIVE
+            )).thenReturn(Optional.empty());
+
+            //then
+            assertThatThrownBy(() -> userService.refreshToken(request))
+                    .isInstanceOf(ResponseStatusException.class)
+                    .satisfies(exception -> {
+                        ResponseStatusException responseStatusException = (ResponseStatusException) exception;
+                        assertThat(responseStatusException.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+                        assertThat(responseStatusException.getReason()).isEqualTo("유효하지 않은 Refresh Token입니다.");
+                    });
             verify(refreshTokenRepository, never()).save(any(RefreshToken.class));
         }
     }
