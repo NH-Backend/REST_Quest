@@ -48,7 +48,6 @@ class ItemControllerTest {
             @DisplayName("It: 200 OK 상태 코드와 함께 ApiResponse 성공 래퍼 규격을 반환한다.")
             void It_전체_목록_조회_성공() throws Exception {
                 // given
-                // 💡 ItemResponse.builder()를 사용하여 레코드의 규격 변경 스트레스로부터 완벽히 안전장치를 둡니다.
                 List<ItemResponse> mockList = List.of(
                         ItemResponse.builder()
                                 .itemId(1L).rId("sword_001").itemName("연습용 검이다.")
