@@ -121,7 +121,7 @@ class JwtAuthenticationFilterTest {
 
             //then
             assertThat(response.getStatus()).isEqualTo(401);
-            assertThat(response.getContentAsString()).contains(ErrorCode.EXPIRED_ACCESS_TOKEN.name());
+            assertThat(response.getContentAsString()).contains(ErrorCode.EXPIRED_ACCESS_TOKEN.getDescription());
             assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
             assertThat(filterChain.getRequest()).isNull();
         }
@@ -145,7 +145,7 @@ class JwtAuthenticationFilterTest {
 
             //then
             assertThat(response.getStatus()).isEqualTo(401);
-            assertThat(response.getContentAsString()).contains(ErrorCode.INVALID_ACCESS_TOKEN.name());
+            assertThat(response.getContentAsString()).contains(ErrorCode.INVALID_ACCESS_TOKEN.getDescription());
             assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
             assertThat(filterChain.getRequest()).isNull();
         }

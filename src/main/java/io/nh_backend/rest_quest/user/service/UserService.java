@@ -3,6 +3,10 @@ package io.nh_backend.rest_quest.user.service;
 import io.jsonwebtoken.JwtException;
 import io.nh_backend.rest_quest.common.constant.ErrorCode;
 import io.nh_backend.rest_quest.common.exception.BusinessException;
+import io.nh_backend.rest_quest.friend_request.domain.FriendStatus;
+import io.nh_backend.rest_quest.friend_request.repository.FriendRequestRepository;
+import io.nh_backend.rest_quest.item.dto.UserItemResponse;
+import io.nh_backend.rest_quest.item.repository.UserItemRepository;
 import io.nh_backend.rest_quest.user.domain.Role;
 import io.nh_backend.rest_quest.user.domain.RefreshToken;
 import io.nh_backend.rest_quest.user.domain.RefreshTokenStatus;
@@ -15,7 +19,10 @@ import io.nh_backend.rest_quest.user.dto.LoginResponse;
 import io.nh_backend.rest_quest.user.dto.RefreshTokenBody;
 import io.nh_backend.rest_quest.user.dto.RefreshTokenRequest;
 import io.nh_backend.rest_quest.user.dto.RefreshTokenRotation;
+import io.nh_backend.rest_quest.user.dto.ShowWalletResponse;
 import io.nh_backend.rest_quest.user.dto.UseCreateRequest;
+import io.nh_backend.rest_quest.user.dto.UserDataResponse;
+import io.nh_backend.rest_quest.user.dto.UserProfileResponse;
 import io.nh_backend.rest_quest.user.dto.UserResponse;
 import io.nh_backend.rest_quest.common.dto.KeyPair;
 import io.nh_backend.rest_quest.user.repository.RefreshTokenRepository;
@@ -30,6 +37,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -39,6 +47,8 @@ public class UserService {
     private final UserProfileRepository userProfileRepository;
     private final WalletRepository walletRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final UserItemRepository userItemRepository;
+    private final FriendRequestRepository friendRequestRepository;
     private final JwtProvider jwtProvider;
     private final PasswordEncoder passwordEncoder;
 
@@ -110,6 +120,35 @@ public class UserService {
         return toResponse(user);
     }
 
+    @Transactional(readOnly = true)
+    public UserDataResponse getMyData(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.UNAUTHORIZED_USER
+                ));
+        UserProfile profile = userProfileRepository.findByUser(user)
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.UNAUTHORIZED_USER
+                ));
+        Wallet wallet = walletRepository.findByUser(user)
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.UNAUTHORIZED_USER
+                ));
+        List<UserItemResponse> inventory = userItemRepository.findAllByUserAndDeletedAtIsNull(user)
+                .stream()
+                .map(UserItemResponse::from)
+                .toList();
+        Long friendCount = friendRequestRepository.countActiveFriends(user, FriendStatus.ACCEPTED);
+
+        return new UserDataResponse(
+                toResponse(user),
+                new UserProfileResponse(profile.getLevel(), profile.getExp()),
+                new ShowWalletResponse(wallet.getGold(), wallet.getGem()),
+                inventory,
+                friendCount
+        );
+    }
+
     @Transactional
     public RefreshTokenRotation refreshToken(RefreshTokenRequest request) {
         RefreshTokenBody refreshTokenBody = parseRefreshToken(request.refreshToken());
@@ -141,6 +180,28 @@ public class UserService {
                 keyPair.refreshToken(),
                 jwtProvider.getAccessTokenExpiresInSeconds()
         );
+    }
+
+    @Transactional
+    public void logout(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.UNAUTHORIZED_USER
+                ));
+
+        refreshTokenRepository.deleteAll(
+                refreshTokenRepository.findAllByUserAndStatus(user, RefreshTokenStatus.ACTIVE)
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public boolean isLoggedIn(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.UNAUTHORIZED_USER
+                ));
+
+        return refreshTokenRepository.existsByUserAndStatus(user, RefreshTokenStatus.ACTIVE);
     }
 
     private RefreshTokenBody parseRefreshToken(String refreshToken) {
