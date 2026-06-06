@@ -408,7 +408,8 @@ class UserServiceTest {
             assertThat(response.inventory().get(0).itemType()).isEqualTo("WEAPON");
             assertThat(response.inventory().get(0).itemGrade()).isEqualTo("COMMON");
             assertThat(response.inventory().get(0).description()).isEqualTo("초보자용 검입니다.");
-            assertThat(response.inventory().get(0).price()).isEqualTo(100);
+            assertThat(response.inventory().get(0).goldPrice()).isEqualTo(100);
+            assertThat(response.inventory().get(0).gemPrice()).isEqualTo(100);
             assertThat(response.inventory().get(0).sellPrice()).isEqualTo(50);
             assertThat(response.inventory().get(0).quantity()).isEqualTo(1);
             assertThat(response.inventory().get(0).equipped()).isTrue();

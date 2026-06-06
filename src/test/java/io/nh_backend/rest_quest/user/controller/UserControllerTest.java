@@ -397,6 +397,7 @@ class UserControllerTest {
                             "초보자용 검입니다.",
                             100,
                             50,
+                            50,
                             1,
                             true,
                             LocalDateTime.of(2025, 1, 1, 0, 0)
@@ -434,7 +435,8 @@ class UserControllerTest {
                     .andExpect(jsonPath("$.data.inventory[0].itemType").value("WEAPON"))
                     .andExpect(jsonPath("$.data.inventory[0].itemGrade").value("COMMON"))
                     .andExpect(jsonPath("$.data.inventory[0].description").value("초보자용 검입니다."))
-                    .andExpect(jsonPath("$.data.inventory[0].price").value(100))
+                    .andExpect(jsonPath("$.data.inventory[0].goldPrice").value(100))
+                    .andExpect(jsonPath("$.data.inventory[0].gemPrice").value(50))
                     .andExpect(jsonPath("$.data.inventory[0].sellPrice").value(50))
                     .andExpect(jsonPath("$.data.inventory[0].quantity").value(1))
                     .andExpect(jsonPath("$.data.inventory[0].equipped").value(true))
