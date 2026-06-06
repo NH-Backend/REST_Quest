@@ -47,14 +47,14 @@ public class JwtProvider {
 
     public String createAccessToken(AccessTokenBody body) {
         Instant now = clock.instant();
-        Instant expiresAt = now.plusSeconds(jwtProperties.getValidations().getAccess());
+        //Instant expiresAt = now.plusSeconds(jwtProperties.getValidations().getAccess());
 
         return Jwts.builder()
                 .issuer(jwtProperties.getPayload().getIssuer())
                 .subject(jwtProperties.getPayload().getSubjectAccessToken())
                 .audience().add(jwtProperties.getPayload().getAudience()).and()
                 .issuedAt(Date.from(now))
-                .expiration(Date.from(expiresAt))
+                .expiration(new Date(new Date().getTime() + jwtProperties.getValidations().getAccess()))
                 .claim(EMAIL_CLAIM, body.email())
                 .claim(ROLE_CLAIM, body.role().name())
                 .signWith(secretKey)

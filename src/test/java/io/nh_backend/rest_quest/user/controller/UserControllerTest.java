@@ -4,6 +4,7 @@ import io.nh_backend.rest_quest.common.constant.ErrorCode;
 import io.nh_backend.rest_quest.common.constant.SuccessCode;
 import io.nh_backend.rest_quest.common.eventhandler.GlobalExceptionHandler;
 import io.nh_backend.rest_quest.common.exception.BusinessException;
+import io.nh_backend.rest_quest.item.dto.UserItemResponse;
 import io.nh_backend.rest_quest.user.domain.Provider;
 import io.nh_backend.rest_quest.user.domain.Role;
 import io.nh_backend.rest_quest.user.domain.Status;
@@ -11,7 +12,10 @@ import io.nh_backend.rest_quest.user.dto.LoginRequest;
 import io.nh_backend.rest_quest.user.dto.LoginResponse;
 import io.nh_backend.rest_quest.user.dto.RefreshTokenRequest;
 import io.nh_backend.rest_quest.user.dto.RefreshTokenRotation;
+import io.nh_backend.rest_quest.user.dto.ShowWalletResponse;
 import io.nh_backend.rest_quest.user.dto.UseCreateRequest;
+import io.nh_backend.rest_quest.user.dto.UserDataResponse;
+import io.nh_backend.rest_quest.user.dto.UserProfileResponse;
 import io.nh_backend.rest_quest.user.dto.UserResponse;
 import io.nh_backend.rest_quest.user.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,6 +30,7 @@ import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.doThrow;
@@ -347,6 +352,134 @@ class UserControllerTest {
         }
     }
 
+    @Nested
+    @DisplayName("내 통합 데이터 조회")
+    class 내_통합_데이터_조회_테스트 {
+        @BeforeEach
+        void setUp() {
+            userService = mock(UserService.class);
+
+            LocalValidatorFactoryBean validator = new LocalValidatorFactoryBean();
+            validator.afterPropertiesSet();
+
+            mockMvc = MockMvcBuilders
+                    .standaloneSetup(new UserController(userService))
+                    .setControllerAdvice(new GlobalExceptionHandler())
+                    .setValidator(validator)
+                    .build();
+        }
+
+        @Test
+        @DisplayName("INF_UNITY_007: 인증된 사용자의 통합 데이터를 반환한다")
+        void getMyData_returnsUserDataResponse() throws Exception {
+            //given
+            String email = "hero@example.com";
+            UserDataResponse response = new UserDataResponse(
+                    new UserResponse(
+                            5L,
+                            "gamer@test.com",
+                            "게이머",
+                            Role.USER,
+                            Status.ACTIVE,
+                            Provider.LOCAL,
+                            LocalDateTime.of(2025, 1, 1, 0, 0),
+                            LocalDateTime.of(2026, 5, 21, 10, 0)
+                    ),
+                    new UserProfileResponse(10, 500),
+                    new ShowWalletResponse(5000, 10),
+                    List.of(new UserItemResponse(
+                            1L,
+                            1L,
+                            "sword_001",
+                            "연습용 검",
+                            "WEAPON",
+                            "COMMON",
+                            "초보자용 검입니다.",
+                            100,
+                            50,
+                            1,
+                            true,
+                            LocalDateTime.of(2025, 1, 1, 0, 0)
+                    )),
+                    3L
+            );
+
+            //when
+            when(userService.getMyData(email)).thenReturn(response);
+
+            mockMvc.perform(get("/api/v1/users/me/data")
+                            .principal(() -> email))
+            //then
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.message").doesNotExist())
+                    .andExpect(jsonPath("$.data.account.userId").value(5L))
+                    .andExpect(jsonPath("$.data.account.email").value("gamer@test.com"))
+                    .andExpect(jsonPath("$.data.account.nickname").value("게이머"))
+                    .andExpect(jsonPath("$.data.account.role").value(Role.USER.name()))
+                    .andExpect(jsonPath("$.data.account.status").value(Status.ACTIVE.name()))
+                    .andExpect(jsonPath("$.data.account.provider").value(Provider.LOCAL.name()))
+                    .andExpect(jsonPath("$.data.account.profileImageUrl").doesNotExist())
+                    .andExpect(jsonPath("$.data.account.createdAt").value("2025-01-01T00:00:00"))
+                    .andExpect(jsonPath("$.data.account.lastLoginAt").value("2026-05-21T10:00:00"))
+                    .andExpect(jsonPath("$.data.profile.level").value(10))
+                    .andExpect(jsonPath("$.data.profile.exp").value(500))
+                    .andExpect(jsonPath("$.data.profile.totalPlaySeconds").doesNotExist())
+                    .andExpect(jsonPath("$.data.wallet.gold").value(5000))
+                    .andExpect(jsonPath("$.data.wallet.gem").value(10))
+                    .andExpect(jsonPath("$.data.inventory[0].userItemId").value(1L))
+                    .andExpect(jsonPath("$.data.inventory[0].itemId").value(1L))
+                    .andExpect(jsonPath("$.data.inventory[0].rId").value("sword_001"))
+                    .andExpect(jsonPath("$.data.inventory[0].itemName").value("연습용 검"))
+                    .andExpect(jsonPath("$.data.inventory[0].itemType").value("WEAPON"))
+                    .andExpect(jsonPath("$.data.inventory[0].itemGrade").value("COMMON"))
+                    .andExpect(jsonPath("$.data.inventory[0].description").value("초보자용 검입니다."))
+                    .andExpect(jsonPath("$.data.inventory[0].price").value(100))
+                    .andExpect(jsonPath("$.data.inventory[0].sellPrice").value(50))
+                    .andExpect(jsonPath("$.data.inventory[0].quantity").value(1))
+                    .andExpect(jsonPath("$.data.inventory[0].equipped").value(true))
+                    .andExpect(jsonPath("$.data.inventory[0].acquiredAt").value("2025-01-01T00:00:00"))
+                    .andExpect(jsonPath("$.data.friendCount").value(3L))
+                    .andExpect(jsonPath("$.data.level").doesNotExist())
+                    .andExpect(jsonPath("$.data.exp").doesNotExist())
+                    .andExpect(jsonPath("$.data.gold").doesNotExist())
+                    .andExpect(jsonPath("$.data.gem").doesNotExist())
+                    .andExpect(jsonPath("$.error").doesNotExist());
+
+            verify(userService).getMyData(email);
+        }
+
+        @Test
+        @DisplayName("인증되지 않은 사용자는 통합 데이터를 조회할 수 없다")
+        void getMyData_returnsUnauthorizedWhenPrincipalDoesNotExist() throws Exception {
+            mockMvc.perform(get("/api/v1/users/me/data"))
+            //then
+                    .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        @DisplayName("인증 사용자를 찾을 수 없으면 Unauthorized 응답을 반환한다")
+        void getMyData_returnsUnauthorizedWhenUserDoesNotExist() throws Exception {
+            //given
+            String email = "hero@example.com";
+
+            //when
+            when(userService.getMyData(email)).thenThrow(new BusinessException(
+                    ErrorCode.UNAUTHORIZED_USER
+            ));
+
+            mockMvc.perform(get("/api/v1/users/me/data")
+                            .principal(() -> email))
+            //then
+                    .andExpect(status().isUnauthorized())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.message").value("인증이 필요합니다."))
+                    .andExpect(jsonPath("$.data").doesNotExist())
+                    .andExpect(jsonPath("$.error").doesNotExist());
+        }
+    }
+
+    @Nested
     @DisplayName("로그아웃")
     class 로그아웃_테스트 {
         @BeforeEach

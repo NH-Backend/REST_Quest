@@ -7,6 +7,7 @@ import io.nh_backend.rest_quest.user.dto.LoginResponse;
 import io.nh_backend.rest_quest.user.dto.RefreshTokenRequest;
 import io.nh_backend.rest_quest.user.dto.RefreshTokenRotation;
 import io.nh_backend.rest_quest.user.dto.UseCreateRequest;
+import io.nh_backend.rest_quest.user.dto.UserDataResponse;
 import io.nh_backend.rest_quest.user.dto.UserResponse;
 import io.nh_backend.rest_quest.user.service.UserService;
 import jakarta.validation.Valid;
@@ -67,6 +68,18 @@ public class UserController {
         return ApiResponse.ok(
                 null,
                 SuccessCode.USER_LOGOUT.getSuccessMessage()
+        );
+    }
+
+    @GetMapping({ "/api/v1/users/me/data"})
+    public ApiResponse<UserDataResponse> getMyData(Principal principal) {
+        if (principal == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "인증이 필요합니다.");
+        }
+
+        return ApiResponse.ok(
+                userService.getMyData(principal.getName()),
+                null
         );
     }
 

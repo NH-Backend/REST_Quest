@@ -23,5 +23,5 @@ custom:
       app-key: ${base64UuidKey:cmVzdC1xdWVzdC1qd3Qtc2VjcmV0LWtleS1tdXN0LWJlLWxvbmc=}
       vanilla-key: ${vanillaKey:REST_Quest}
     validations:
-      access: ${accessTokenTime:900}
+      access: ${accessTokenTime:900000}
       refresh: ${refreshTokenTime:1209600}
