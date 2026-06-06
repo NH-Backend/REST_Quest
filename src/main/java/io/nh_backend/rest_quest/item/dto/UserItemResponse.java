@@ -8,17 +8,17 @@ import java.time.LocalDateTime;
 public record UserItemResponse(
         Long userItemId,
         Long itemId,
-        Long rid,
+        String rId,
         String itemName,
-        ItemType itemType,
-        ItemGrade itemGrade,
+        String itemType,
+        String itemGrade,
         String description,
         Integer goldPrice,
         Integer gemPrice,
         Integer sellPrice,
+        Integer quantity,
         Boolean equipped,
-        LocalDateTime acquiredAt
-
+        String acquiredAt
 ) {
 
 }
