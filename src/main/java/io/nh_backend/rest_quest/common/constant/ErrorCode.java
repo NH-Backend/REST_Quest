@@ -19,7 +19,9 @@ public enum ErrorCode {
     UNAUTHORIZED_USER(HttpStatus.UNAUTHORIZED,"인증이 필요합니다."),
 
     //ITEM
-    ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "아이템을 찾을 수 없습니다.");
+    ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "아이템을 찾을 수 없습니다."),
+    ITEM_STOCK_SHORTAGE(HttpStatus.BAD_REQUEST, "아이템 수량이 부족합니다."),
+    QUANTITY_UNDER_ONE(HttpStatus.BAD_REQUEST, "지급 수량은 1개 이상이어야 합니다.");
 
 
     private final HttpStatus status;
