@@ -133,7 +133,7 @@ class UserControllerTest {
             //then
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.success").value(false))
-                    .andExpect(jsonPath("$.message").value("비밀번호는 8~64자여야 합니다."))
+                    .andExpect(jsonPath("$.message").value(ErrorCode.PASSWORD_BAD_REQUEST.getDescription()))
                     .andExpect(jsonPath("$.data").doesNotExist())
                     .andExpect(jsonPath("$.error").doesNotExist());
         }
