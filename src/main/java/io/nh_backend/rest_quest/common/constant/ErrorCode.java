@@ -19,6 +19,14 @@ public enum ErrorCode {
     UNAUTHORIZED_USER(HttpStatus.UNAUTHORIZED,"인증이 필요합니다."),
     PASSWORD_BAD_REQUEST(HttpStatus.BAD_REQUEST,"비밀번호는 8~64자여야 합니다"),
 
+    //FRIEND
+    FRIEND_REQUEST_SELF_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "자기 자신에게 친구 요청을 보낼 수 없습니다."),
+    FRIEND_RELATION_ALREADY_EXISTS(HttpStatus.CONFLICT, "이미 친구 관계입니다. / 이미 보낸 친구 요청이 있습니다."),
+    FRIEND_REQUEST_RECEIVER_ONLY(HttpStatus.BAD_REQUEST, "본인에게 온 요청만 수락할 수 있습니다."),
+    FRIEND_REQUEST_DECLINE_RECEIVER_ONLY(HttpStatus.BAD_REQUEST, "본인에게 온 요청만 거절할 수 있습니다."),
+    FRIEND_REQUEST_SENDER_ONLY(HttpStatus.BAD_REQUEST, "본인이 보낸 요청만 취소할 수 있습니다."),
+    FRIEND_REQUEST_NOT_FOUND(HttpStatus.NOT_FOUND, "친구 요청을 찾을 수 없습니다."),
+
     //ITEM
     ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "아이템을 찾을 수 없습니다."),
 
