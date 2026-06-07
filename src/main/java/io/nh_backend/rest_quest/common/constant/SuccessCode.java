@@ -13,6 +13,7 @@ public enum SuccessCode {
     INVENTORY_READ("인벤토리 조회가 완료되었습니다."),
     ITEM_GET("아이템을 획득했습니다."),
     ITEM_DISCARD("아이템을 버렸습니다."),
+    GACHA_PURCHASED("구매가 완료되었습니다."),
 
     //USER
     USER_CREATED("가입되었습니다."),
