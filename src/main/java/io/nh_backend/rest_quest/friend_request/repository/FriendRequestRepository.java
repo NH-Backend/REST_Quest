@@ -47,6 +47,20 @@ public interface FriendRequestRepository extends JpaRepository<FriendRequest, Lo
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<FriendRequest> findByIdAndStatusAndDeletedAtIsNull(Long id, FriendStatus status);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    Optional<FriendRequest> findByIdAndToUserAndStatusAndDeletedAtIsNull(
+            Long id,
+            User toUser,
+            FriendStatus status
+    );
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    Optional<FriendRequest> findByIdAndFromUserAndStatusAndDeletedAtIsNull(
+            Long id,
+            User fromUser,
+            FriendStatus status
+    );
+
     @Query("""
             select friendRequest
             from FriendRequest friendRequest

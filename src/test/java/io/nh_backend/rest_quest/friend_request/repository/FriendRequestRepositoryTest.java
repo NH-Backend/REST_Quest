@@ -112,6 +112,70 @@ class FriendRequestRepositoryTest {
     }
 
     @Test
+    @DisplayName("받은 사람 기준 PENDING 친구 요청만 잠금 조회된다")
+    void findByIdAndToUserAndStatusAndDeletedAtIsNull_findsOnlyReceiverPendingRequest() {
+        //given
+        User fromUser = saveUser("from-receiver-lock@test.com", "보낸유저");
+        User toUser = saveUser("to-receiver-lock@test.com", "받은유저");
+        FriendRequest friendRequest = friendRequestRepository.save(FriendRequest.builder()
+                .fromUser(fromUser)
+                .toUser(toUser)
+                .status(FriendStatus.PENDING)
+                .build());
+
+        entityManager.flush();
+        entityManager.clear();
+
+        //when
+        var foundByReceiver = friendRequestRepository.findByIdAndToUserAndStatusAndDeletedAtIsNull(
+                friendRequest.getId(),
+                toUser,
+                FriendStatus.PENDING
+        );
+        var foundBySender = friendRequestRepository.findByIdAndToUserAndStatusAndDeletedAtIsNull(
+                friendRequest.getId(),
+                fromUser,
+                FriendStatus.PENDING
+        );
+
+        //then
+        assertThat(foundByReceiver).isPresent();
+        assertThat(foundBySender).isEmpty();
+    }
+
+    @Test
+    @DisplayName("보낸 사람 기준 PENDING 친구 요청만 잠금 조회된다")
+    void findByIdAndFromUserAndStatusAndDeletedAtIsNull_findsOnlySenderPendingRequest() {
+        //given
+        User fromUser = saveUser("from-sender-lock@test.com", "보낸유저");
+        User toUser = saveUser("to-sender-lock@test.com", "받은유저");
+        FriendRequest friendRequest = friendRequestRepository.save(FriendRequest.builder()
+                .fromUser(fromUser)
+                .toUser(toUser)
+                .status(FriendStatus.PENDING)
+                .build());
+
+        entityManager.flush();
+        entityManager.clear();
+
+        //when
+        var foundBySender = friendRequestRepository.findByIdAndFromUserAndStatusAndDeletedAtIsNull(
+                friendRequest.getId(),
+                fromUser,
+                FriendStatus.PENDING
+        );
+        var foundByReceiver = friendRequestRepository.findByIdAndFromUserAndStatusAndDeletedAtIsNull(
+                friendRequest.getId(),
+                toUser,
+                FriendStatus.PENDING
+        );
+
+        //then
+        assertThat(foundBySender).isPresent();
+        assertThat(foundByReceiver).isEmpty();
+    }
+
+    @Test
     @DisplayName("삭제된 PENDING 친구 요청은 받은 친구 요청 목록에서 조회되지 않는다")
     void findAllByToUserAndStatusAndDeletedAtIsNull_excludesDeletedPendingRequest() {
         //given

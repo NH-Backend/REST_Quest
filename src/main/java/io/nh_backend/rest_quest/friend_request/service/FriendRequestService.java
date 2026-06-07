@@ -10,6 +10,7 @@ import io.nh_backend.rest_quest.friend_request.repository.FriendRequestRepositor
 import io.nh_backend.rest_quest.user.domain.User;
 import io.nh_backend.rest_quest.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,6 +19,7 @@ import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class FriendRequestService {
 
     private final FriendRequestRepository friendRequestRepository;
@@ -62,6 +64,7 @@ public class FriendRequestService {
                 .toUser(toUser)
                 .status(FriendStatus.PENDING)
                 .build());
+        log.info("친구요청 메시지 보내기");
 
         return FriendResponse.from(friendRequest, toUser);
     }
@@ -69,11 +72,7 @@ public class FriendRequestService {
     @Transactional
     public FriendResponse acceptFriendRequest(String email, Long requestId) {
         User user = findAuthenticatedUser(email);
-        FriendRequest friendRequest = findPendingFriendRequest(requestId);
-
-        if (!Objects.equals(friendRequest.getToUser().getId(), user.getId())) {
-            throw new BusinessException(ErrorCode.FRIEND_REQUEST_RECEIVER_ONLY);
-        }
+        FriendRequest friendRequest = findPendingFriendRequestToUser(requestId, user);
 
         friendRequest.accept();
 
@@ -83,24 +82,16 @@ public class FriendRequestService {
     @Transactional
     public void declineFriendRequest(String email, Long requestId) {
         User user = findAuthenticatedUser(email);
-        FriendRequest friendRequest = findPendingFriendRequest(requestId);
-
-        if (!Objects.equals(friendRequest.getToUser().getId(), user.getId())) {
-            throw new BusinessException(ErrorCode.FRIEND_REQUEST_DECLINE_RECEIVER_ONLY);
-        }
-
+        FriendRequest friendRequest = findPendingFriendRequestToUser(requestId, user);
+        log.info("받은친구요청 거절");
         friendRequest.decline();
     }
 
     @Transactional
     public void cancelFriendRequest(String email, Long requestId) {
         User user = findAuthenticatedUser(email);
-        FriendRequest friendRequest = findPendingFriendRequest(requestId);
-
-        if (!Objects.equals(friendRequest.getFromUser().getId(), user.getId())) {
-            throw new BusinessException(ErrorCode.FRIEND_REQUEST_SENDER_ONLY);
-        }
-
+        FriendRequest friendRequest = findPendingFriendRequestFromUser(requestId, user);
+        log.info("보낸친구요청 취소");
         friendRequest.cancel();
     }
 
@@ -122,8 +113,15 @@ public class FriendRequestService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.UNAUTHORIZED_USER));
     }
 
-    private FriendRequest findPendingFriendRequest(Long requestId) {
-        return friendRequestRepository.findByIdAndStatusAndDeletedAtIsNull(requestId, FriendStatus.PENDING)
+    private FriendRequest findPendingFriendRequestToUser(Long requestId, User user) {
+        return friendRequestRepository
+                .findByIdAndToUserAndStatusAndDeletedAtIsNull(requestId, user, FriendStatus.PENDING)
+                .orElseThrow(() -> new BusinessException(ErrorCode.FRIEND_REQUEST_NOT_FOUND));
+    }
+
+    private FriendRequest findPendingFriendRequestFromUser(Long requestId, User user) {
+        return friendRequestRepository
+                .findByIdAndFromUserAndStatusAndDeletedAtIsNull(requestId, user, FriendStatus.PENDING)
                 .orElseThrow(() -> new BusinessException(ErrorCode.FRIEND_REQUEST_NOT_FOUND));
     }
 

@@ -7,6 +7,7 @@ import io.nh_backend.rest_quest.friend_request.dto.FriendResponse;
 import io.nh_backend.rest_quest.friend_request.service.FriendRequestService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,6 +22,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
+@Slf4j
 public class FriendRequestController {
 
     private final FriendRequestService friendRequestService;
@@ -39,6 +41,7 @@ public class FriendRequestController {
 
     @GetMapping("/api/v1/users/me/friends/requests")
     public ApiResponse<List<FriendResponse>> getPendingRequestsToMe(Principal principal) {
+        log.info("친구요청 목록 조회중");
         if (principal == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "인증이 필요합니다.");
         }
