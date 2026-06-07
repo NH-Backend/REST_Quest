@@ -13,7 +13,7 @@ public class Wallet {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Integer gold = 3000;
+    private Integer gold = 30000;
 
     private Integer gem = 100;
 
