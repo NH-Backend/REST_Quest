@@ -27,6 +27,10 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleMethodArgumentNotValidException(
             MethodArgumentNotValidException exception
     ) {
+        if (hasPasswordFieldError(exception)) {
+            return handleBusinessException(new BusinessException(ErrorCode.PASSWORD_BAD_REQUEST));
+        }
+
         String errorMessage = exception.getBindingResult()
                 .getFieldErrors()
                 .stream()
@@ -36,17 +40,29 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(
-                        ApiResponse.fail(errorMessage)
-                );
+                .body(ApiResponse.fail(errorMessage));
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<ApiResponse<Void>> handleResponseStatusException(ResponseStatusException exception) {
+        return ResponseEntity
+                .status(exception.getStatusCode())
+                .body(ApiResponse.fail(exception.getReason()));
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleException(Exception exception) {
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(
-                        ApiResponse.fail("서버 오류가 발생했습니다.")
-                );
+                .body(ApiResponse.fail(ErrorCode.INTERNAL_SERVER_ERROR.getDescription()));
     }
+
+    private boolean hasPasswordFieldError(MethodArgumentNotValidException exception) {
+        return exception.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .anyMatch(fieldError -> "password".equals(fieldError.getField()));
+    }
+
+
 }

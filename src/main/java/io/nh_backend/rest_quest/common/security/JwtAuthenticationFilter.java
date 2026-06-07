@@ -84,14 +84,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         response.getWriter().write("""
                 {
                   "success": false,
-                  "message": "해당 요청이 실패되었습니다.",
-                  "data": null,
-                  "error": {
-                    "code": "%s",
-                    "message": "%s"
-                  }
+                  "message": "%s",
+                  "data": null
                 }
-                """.formatted(errorCode.name(), errorCode.getDescription())
+                """.formatted(errorCode.getDescription())
         );
     }
 }
