@@ -239,7 +239,8 @@ class FriendRequestServiceTest {
 
             //when
             when(userRepository.findByEmail(me.getEmail())).thenReturn(Optional.of(me));
-            when(friendRequestRepository.findById(friendRequest.getId())).thenReturn(Optional.of(friendRequest));
+            when(friendRequestRepository.findByIdAndStatusAndDeletedAtIsNull(friendRequest.getId(), FriendStatus.PENDING))
+                    .thenReturn(Optional.of(friendRequest));
 
             FriendResponse response = friendRequestService.acceptFriendRequest(me.getEmail(), friendRequest.getId());
 
@@ -260,7 +261,8 @@ class FriendRequestServiceTest {
 
             //when
             when(userRepository.findByEmail(me.getEmail())).thenReturn(Optional.of(me));
-            when(friendRequestRepository.findById(friendRequest.getId())).thenReturn(Optional.of(friendRequest));
+            when(friendRequestRepository.findByIdAndStatusAndDeletedAtIsNull(friendRequest.getId(), FriendStatus.PENDING))
+                    .thenReturn(Optional.of(friendRequest));
 
             //then
             assertBusinessException(
@@ -277,11 +279,30 @@ class FriendRequestServiceTest {
 
             //when
             when(userRepository.findByEmail(me.getEmail())).thenReturn(Optional.of(me));
-            when(friendRequestRepository.findById(99L)).thenReturn(Optional.empty());
+            when(friendRequestRepository.findByIdAndStatusAndDeletedAtIsNull(99L, FriendStatus.PENDING))
+                    .thenReturn(Optional.empty());
 
             //then
             assertBusinessException(
                     () -> friendRequestService.acceptFriendRequest(me.getEmail(), 99L),
+                    ErrorCode.FRIEND_REQUEST_NOT_FOUND
+            );
+        }
+
+        @Test
+        @DisplayName("DECLINED 또는 CANCELED 요청은 수락할 수 없다")
+        void acceptFriendRequest_throwsNotFoundWhenRequestIsNotPending() {
+            //given
+            User me = createUser(5L, "gamer@test.com", "게이머");
+
+            //when
+            when(userRepository.findByEmail(me.getEmail())).thenReturn(Optional.of(me));
+            when(friendRequestRepository.findByIdAndStatusAndDeletedAtIsNull(2L, FriendStatus.PENDING))
+                    .thenReturn(Optional.empty());
+
+            //then
+            assertBusinessException(
+                    () -> friendRequestService.acceptFriendRequest(me.getEmail(), 2L),
                     ErrorCode.FRIEND_REQUEST_NOT_FOUND
             );
         }
@@ -302,7 +323,8 @@ class FriendRequestServiceTest {
 
             //when
             when(userRepository.findByEmail(me.getEmail())).thenReturn(Optional.of(me));
-            when(friendRequestRepository.findById(friendRequest.getId())).thenReturn(Optional.of(friendRequest));
+            when(friendRequestRepository.findByIdAndStatusAndDeletedAtIsNull(friendRequest.getId(), FriendStatus.PENDING))
+                    .thenReturn(Optional.of(friendRequest));
 
             friendRequestService.declineFriendRequest(me.getEmail(), friendRequest.getId());
 
@@ -321,12 +343,31 @@ class FriendRequestServiceTest {
 
             //when
             when(userRepository.findByEmail(me.getEmail())).thenReturn(Optional.of(me));
-            when(friendRequestRepository.findById(friendRequest.getId())).thenReturn(Optional.of(friendRequest));
+            when(friendRequestRepository.findByIdAndStatusAndDeletedAtIsNull(friendRequest.getId(), FriendStatus.PENDING))
+                    .thenReturn(Optional.of(friendRequest));
 
             //then
             assertBusinessException(
                     () -> friendRequestService.declineFriendRequest(me.getEmail(), friendRequest.getId()),
                     ErrorCode.FRIEND_REQUEST_DECLINE_RECEIVER_ONLY
+            );
+        }
+
+        @Test
+        @DisplayName("DECLINED 또는 CANCELED 요청은 다시 거절할 수 없다")
+        void declineFriendRequest_throwsNotFoundWhenRequestIsNotPending() {
+            //given
+            User me = createUser(5L, "gamer@test.com", "게이머");
+
+            //when
+            when(userRepository.findByEmail(me.getEmail())).thenReturn(Optional.of(me));
+            when(friendRequestRepository.findByIdAndStatusAndDeletedAtIsNull(2L, FriendStatus.PENDING))
+                    .thenReturn(Optional.empty());
+
+            //then
+            assertBusinessException(
+                    () -> friendRequestService.declineFriendRequest(me.getEmail(), 2L),
+                    ErrorCode.FRIEND_REQUEST_NOT_FOUND
             );
         }
     }
@@ -346,7 +387,8 @@ class FriendRequestServiceTest {
 
             //when
             when(userRepository.findByEmail(me.getEmail())).thenReturn(Optional.of(me));
-            when(friendRequestRepository.findById(friendRequest.getId())).thenReturn(Optional.of(friendRequest));
+            when(friendRequestRepository.findByIdAndStatusAndDeletedAtIsNull(friendRequest.getId(), FriendStatus.PENDING))
+                    .thenReturn(Optional.of(friendRequest));
 
             friendRequestService.cancelFriendRequest(me.getEmail(), friendRequest.getId());
 
@@ -366,12 +408,31 @@ class FriendRequestServiceTest {
 
             //when
             when(userRepository.findByEmail(me.getEmail())).thenReturn(Optional.of(me));
-            when(friendRequestRepository.findById(friendRequest.getId())).thenReturn(Optional.of(friendRequest));
+            when(friendRequestRepository.findByIdAndStatusAndDeletedAtIsNull(friendRequest.getId(), FriendStatus.PENDING))
+                    .thenReturn(Optional.of(friendRequest));
 
             //then
             assertBusinessException(
                     () -> friendRequestService.cancelFriendRequest(me.getEmail(), friendRequest.getId()),
                     ErrorCode.FRIEND_REQUEST_SENDER_ONLY
+            );
+        }
+
+        @Test
+        @DisplayName("DECLINED 또는 CANCELED 요청은 취소할 수 없다")
+        void cancelFriendRequest_throwsNotFoundWhenRequestIsNotPending() {
+            //given
+            User me = createUser(5L, "gamer@test.com", "게이머");
+
+            //when
+            when(userRepository.findByEmail(me.getEmail())).thenReturn(Optional.of(me));
+            when(friendRequestRepository.findByIdAndStatusAndDeletedAtIsNull(3L, FriendStatus.PENDING))
+                    .thenReturn(Optional.empty());
+
+            //then
+            assertBusinessException(
+                    () -> friendRequestService.cancelFriendRequest(me.getEmail(), 3L),
+                    ErrorCode.FRIEND_REQUEST_NOT_FOUND
             );
         }
     }

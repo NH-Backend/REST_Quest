@@ -28,6 +28,116 @@ class FriendRequestRepositoryTest {
     private EntityManager entityManager;
 
     @Test
+    @DisplayName("삭제된 친구 요청은 ID로 조회되지 않는다")
+    void findByIdAndDeletedAtIsNull_excludesDeletedRequest() {
+        //given
+        User fromUser = saveUser("from-id@test.com", "보낸유저");
+        User toUser = saveUser("to-id@test.com", "받은유저");
+        FriendRequest friendRequest = friendRequestRepository.save(FriendRequest.builder()
+                .fromUser(fromUser)
+                .toUser(toUser)
+                .status(FriendStatus.PENDING)
+                .build());
+
+        friendRequest.delete();
+        entityManager.flush();
+        entityManager.clear();
+
+        //when
+        var foundRequest = friendRequestRepository.findByIdAndDeletedAtIsNull(friendRequest.getId());
+
+        //then
+        assertThat(foundRequest).isEmpty();
+    }
+
+    @Test
+    @DisplayName("PENDING이 아닌 친구 요청은 상태 변경용 조회에서 제외된다")
+    void findByIdAndStatusAndDeletedAtIsNull_excludesNonPendingRequest() {
+        //given
+        User fromUser = saveUser("from-status@test.com", "보낸유저");
+        User toUser = saveUser("to-status@test.com", "받은유저");
+        FriendRequest declinedRequest = friendRequestRepository.save(FriendRequest.builder()
+                .fromUser(fromUser)
+                .toUser(toUser)
+                .status(FriendStatus.DECLINED)
+                .build());
+        FriendRequest canceledRequest = friendRequestRepository.save(FriendRequest.builder()
+                .fromUser(toUser)
+                .toUser(fromUser)
+                .status(FriendStatus.CANCELED)
+                .build());
+
+        entityManager.flush();
+        entityManager.clear();
+
+        //when
+        var foundDeclinedRequest = friendRequestRepository.findByIdAndStatusAndDeletedAtIsNull(
+                declinedRequest.getId(),
+                FriendStatus.PENDING
+        );
+        var foundCanceledRequest = friendRequestRepository.findByIdAndStatusAndDeletedAtIsNull(
+                canceledRequest.getId(),
+                FriendStatus.PENDING
+        );
+
+        //then
+        assertThat(foundDeclinedRequest).isEmpty();
+        assertThat(foundCanceledRequest).isEmpty();
+    }
+
+    @Test
+    @DisplayName("삭제된 PENDING 친구 요청은 상태 변경용 조회에서 제외된다")
+    void findByIdAndStatusAndDeletedAtIsNull_excludesDeletedPendingRequest() {
+        //given
+        User fromUser = saveUser("from-deleted-pending-status@test.com", "보낸유저");
+        User toUser = saveUser("to-deleted-pending-status@test.com", "받은유저");
+        FriendRequest friendRequest = friendRequestRepository.save(FriendRequest.builder()
+                .fromUser(fromUser)
+                .toUser(toUser)
+                .status(FriendStatus.PENDING)
+                .build());
+
+        friendRequest.delete();
+        entityManager.flush();
+        entityManager.clear();
+
+        //when
+        var foundRequest = friendRequestRepository.findByIdAndStatusAndDeletedAtIsNull(
+                friendRequest.getId(),
+                FriendStatus.PENDING
+        );
+
+        //then
+        assertThat(foundRequest).isEmpty();
+    }
+
+    @Test
+    @DisplayName("삭제된 PENDING 친구 요청은 받은 친구 요청 목록에서 조회되지 않는다")
+    void findAllByToUserAndStatusAndDeletedAtIsNull_excludesDeletedPendingRequest() {
+        //given
+        User fromUser = saveUser("from-pending@test.com", "보낸유저");
+        User toUser = saveUser("to-pending@test.com", "받은유저");
+        FriendRequest friendRequest = friendRequestRepository.save(FriendRequest.builder()
+                .fromUser(fromUser)
+                .toUser(toUser)
+                .status(FriendStatus.PENDING)
+                .build());
+
+        friendRequest.delete();
+        entityManager.flush();
+        entityManager.clear();
+
+        //when
+        var pendingRequests = friendRequestRepository.findAllByToUserAndStatusAndDeletedAtIsNull(
+                toUser,
+                FriendStatus.PENDING
+        );
+
+        //then
+        assertThat(pendingRequests).isEmpty();
+    }
+
+    @Test
     @DisplayName("삭제된 친구 관계는 fromUser와 toUser 양쪽 친구 목록에서 조회되지 않는다")
     void findAcceptedFriends_excludesDeletedRelationForBothUsers() {
         //given
@@ -50,6 +160,33 @@ class FriendRequestRepositoryTest {
         //then
         assertThat(fromUserFriends).isEmpty();
         assertThat(toUserFriends).isEmpty();
+    }
+
+    @Test
+    @DisplayName("삭제된 ACCEPTED 친구 관계는 양방향 관계 조회에서 제외된다")
+    void findAcceptedRelationsBetween_excludesDeletedRelation() {
+        //given
+        User fromUser = saveUser("from-deleted-relation@test.com", "보낸유저");
+        User toUser = saveUser("to-deleted-relation@test.com", "받은유저");
+        FriendRequest friendRequest = friendRequestRepository.save(FriendRequest.builder()
+                .fromUser(fromUser)
+                .toUser(toUser)
+                .status(FriendStatus.ACCEPTED)
+                .build());
+
+        friendRequest.delete();
+        entityManager.flush();
+        entityManager.clear();
+
+        //when
+        var foundRelations = friendRequestRepository.findAcceptedRelationsBetween(
+                fromUser,
+                toUser.getId(),
+                FriendStatus.ACCEPTED
+        );
+
+        //then
+        assertThat(foundRelations).isEmpty();
     }
 
     @Test
@@ -119,6 +256,29 @@ class FriendRequestRepositoryTest {
         assertThat(foundRelations)
                 .extracting(FriendRequest::getId)
                 .containsExactlyInAnyOrder(sentRelation.getId(), receivedRelation.getId());
+    }
+
+    @Test
+    @DisplayName("삭제된 친구 요청은 활성 관계 조회에서 제외된다")
+    void existsActiveRelationBetween_excludesDeletedRequest() {
+        //given
+        User fromUser = saveUser("from-deleted-active@test.com", "보낸유저");
+        User toUser = saveUser("to-deleted-active@test.com", "받은유저");
+        FriendRequest friendRequest = friendRequestRepository.save(FriendRequest.builder()
+                .fromUser(fromUser)
+                .toUser(toUser)
+                .status(FriendStatus.PENDING)
+                .build());
+
+        friendRequest.delete();
+        entityManager.flush();
+        entityManager.clear();
+
+        //when
+        boolean exists = friendRequestRepository.existsActiveRelationBetween(fromUser, toUser);
+
+        //then
+        assertThat(exists).isFalse();
     }
 
     @Test

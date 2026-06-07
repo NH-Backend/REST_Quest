@@ -69,7 +69,7 @@ public class FriendRequestService {
     @Transactional
     public FriendResponse acceptFriendRequest(String email, Long requestId) {
         User user = findAuthenticatedUser(email);
-        FriendRequest friendRequest = findActiveFriendRequest(requestId);
+        FriendRequest friendRequest = findPendingFriendRequest(requestId);
 
         if (!Objects.equals(friendRequest.getToUser().getId(), user.getId())) {
             throw new BusinessException(ErrorCode.FRIEND_REQUEST_RECEIVER_ONLY);
@@ -83,7 +83,7 @@ public class FriendRequestService {
     @Transactional
     public void declineFriendRequest(String email, Long requestId) {
         User user = findAuthenticatedUser(email);
-        FriendRequest friendRequest = findActiveFriendRequest(requestId);
+        FriendRequest friendRequest = findPendingFriendRequest(requestId);
 
         if (!Objects.equals(friendRequest.getToUser().getId(), user.getId())) {
             throw new BusinessException(ErrorCode.FRIEND_REQUEST_DECLINE_RECEIVER_ONLY);
@@ -95,7 +95,7 @@ public class FriendRequestService {
     @Transactional
     public void cancelFriendRequest(String email, Long requestId) {
         User user = findAuthenticatedUser(email);
-        FriendRequest friendRequest = findActiveFriendRequest(requestId);
+        FriendRequest friendRequest = findPendingFriendRequest(requestId);
 
         if (!Objects.equals(friendRequest.getFromUser().getId(), user.getId())) {
             throw new BusinessException(ErrorCode.FRIEND_REQUEST_SENDER_ONLY);
@@ -122,9 +122,8 @@ public class FriendRequestService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.UNAUTHORIZED_USER));
     }
 
-    private FriendRequest findActiveFriendRequest(Long requestId) {
-        return friendRequestRepository.findById(requestId)
-                .filter(friendRequest -> friendRequest.getDeletedAt() == null)
+    private FriendRequest findPendingFriendRequest(Long requestId) {
+        return friendRequestRepository.findByIdAndStatusAndDeletedAtIsNull(requestId, FriendStatus.PENDING)
                 .orElseThrow(() -> new BusinessException(ErrorCode.FRIEND_REQUEST_NOT_FOUND));
     }
 
