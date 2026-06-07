@@ -375,4 +375,46 @@ class FriendRequestControllerTest {
                     .andExpect(jsonPath("$.data").doesNotExist());
         }
     }
+
+    @Nested
+    @DisplayName("친구 관계 삭제")
+    class 친구_관계_삭제_테스트 {
+
+        @Test
+        @DisplayName("INF_UNITY_016: 친구 관계를 삭제한다")
+        void deleteFriend_returnsSuccess() throws Exception {
+            //given
+            String email = "gamer@test.com";
+
+            mockMvc.perform(delete("/api/v1/users/me/friends/8")
+                            .principal(() -> email))
+            //then
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.message").value(SuccessCode.FRIEND_DELETED.getSuccessMessage()))
+                    .andExpect(jsonPath("$.data").isEmpty())
+                    .andExpect(jsonPath("$.error").doesNotExist());
+
+            verify(friendRequestService).deleteFriend(email, 8L);
+        }
+
+        @Test
+        @DisplayName("친구 관계가 아니면 Not Found 응답을 반환한다")
+        void deleteFriend_returnsNotFoundWhenRelationDoesNotExist() throws Exception {
+            //given
+            String email = "gamer@test.com";
+
+            //when
+            doThrow(new BusinessException(ErrorCode.FRIEND_RELATION_NOT_FOUND))
+                    .when(friendRequestService).deleteFriend(email, 8L);
+
+            mockMvc.perform(delete("/api/v1/users/me/friends/8")
+                            .principal(() -> email))
+            //then
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.message").value(ErrorCode.FRIEND_RELATION_NOT_FOUND.getDescription()))
+                    .andExpect(jsonPath("$.data").doesNotExist());
+        }
+    }
 }

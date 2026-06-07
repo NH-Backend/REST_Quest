@@ -104,6 +104,19 @@ public class FriendRequestService {
         friendRequest.cancel();
     }
 
+    @Transactional
+    public void deleteFriend(String email, Long friendUserId) {
+        User user = findAuthenticatedUser(email);
+        List<FriendRequest> friendRequests = friendRequestRepository
+                .findAcceptedRelationsBetween(user, friendUserId, FriendStatus.ACCEPTED);
+
+        if (friendRequests.isEmpty()) {
+            throw new BusinessException(ErrorCode.FRIEND_RELATION_NOT_FOUND);
+        }
+
+        friendRequests.forEach(FriendRequest::delete);
+    }
+
     private User findAuthenticatedUser(String email) {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new BusinessException(ErrorCode.UNAUTHORIZED_USER));

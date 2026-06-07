@@ -194,6 +194,34 @@ class FriendRequestServiceTest {
             );
             verify(friendRequestRepository, never()).save(org.mockito.ArgumentMatchers.any(FriendRequest.class));
         }
+
+        @Test
+        @DisplayName("거절된 친구 요청은 새 친구 요청 전송을 막지 않는다")
+        void sendFriendRequest_createsRequestWhenDeclinedRelationExists() {
+            //given
+            User me = createUser(5L, "gamer@test.com", "게이머");
+            User receiver = createUser(8L, "receiver@test.com", "상대방닉네임");
+            FriendRequestCreateRequest request = new FriendRequestCreateRequest(receiver.getId());
+
+            //when
+            when(userRepository.findByEmail(me.getEmail())).thenReturn(Optional.of(me));
+            when(userRepository.findById(receiver.getId())).thenReturn(Optional.of(receiver));
+            when(friendRequestRepository.existsActiveRelationBetween(me, receiver)).thenReturn(false);
+            when(friendRequestRepository.save(org.mockito.ArgumentMatchers.any(FriendRequest.class)))
+                    .thenAnswer(invocation -> {
+                        FriendRequest saved = invocation.getArgument(0);
+                        ReflectionTestUtils.setField(saved, "id", 4L);
+                        ReflectionTestUtils.setField(saved, "createdAt", LocalDateTime.of(2026, 5, 21, 13, 0));
+                        return saved;
+                    });
+
+            FriendResponse response = friendRequestService.sendFriendRequest(me.getEmail(), request);
+
+            //then
+            assertThat(response.friendRequestId()).isEqualTo(4L);
+            assertThat(response.status()).isEqualTo("PENDING");
+            assertThat(response.nickname()).isEqualTo("상대방닉네임");
+        }
     }
 
     @Nested
@@ -344,6 +372,95 @@ class FriendRequestServiceTest {
             assertBusinessException(
                     () -> friendRequestService.cancelFriendRequest(me.getEmail(), friendRequest.getId()),
                     ErrorCode.FRIEND_REQUEST_SENDER_ONLY
+            );
+        }
+    }
+
+    @Nested
+    @DisplayName("친구 관계 삭제")
+    class 친구_관계_삭제_테스트 {
+
+        @Test
+        @DisplayName("INF_UNITY_016: ACCEPTED 친구 관계를 삭제한다")
+        void deleteFriend_deletesAcceptedFriendRelation() {
+            //given
+            User me = createUser(5L, "gamer@test.com", "게이머");
+            User friend = createUser(8L, "friend@test.com", "친구닉네임");
+            FriendRequest friendRequest = createFriendRequest(1L, me, friend, FriendStatus.ACCEPTED,
+                    LocalDateTime.of(2025, 1, 10, 12, 0));
+
+            //when
+            when(userRepository.findByEmail(me.getEmail())).thenReturn(Optional.of(me));
+            when(friendRequestRepository.findAcceptedRelationsBetween(me, friend.getId(), FriendStatus.ACCEPTED))
+                    .thenReturn(List.of(friendRequest));
+
+            friendRequestService.deleteFriend(me.getEmail(), friend.getId());
+
+            //then
+            assertThat(friendRequest.getDeletedAt()).isNotNull();
+            verify(friendRequestRepository).findAcceptedRelationsBetween(me, friend.getId(), FriendStatus.ACCEPTED);
+        }
+
+        @Test
+        @DisplayName("INF_UNITY_016: 요청을 받은 유저도 ACCEPTED 친구 관계를 삭제할 수 있다")
+        void deleteFriend_deletesAcceptedRelationWhenAuthenticatedUserIsToUser() {
+            //given
+            User sender = createUser(5L, "sender@test.com", "요청보낸유저");
+            User me = createUser(8L, "gamer@test.com", "게이머");
+            FriendRequest friendRequest = createFriendRequest(1L, sender, me, FriendStatus.ACCEPTED,
+                    LocalDateTime.of(2025, 1, 10, 12, 0));
+
+            //when
+            when(userRepository.findByEmail(me.getEmail())).thenReturn(Optional.of(me));
+            when(friendRequestRepository.findAcceptedRelationsBetween(me, sender.getId(), FriendStatus.ACCEPTED))
+                    .thenReturn(List.of(friendRequest));
+
+            friendRequestService.deleteFriend(me.getEmail(), sender.getId());
+
+            //then
+            assertThat(friendRequest.getDeletedAt()).isNotNull();
+            verify(friendRequestRepository).findAcceptedRelationsBetween(me, sender.getId(), FriendStatus.ACCEPTED);
+        }
+
+        @Test
+        @DisplayName("INF_UNITY_016: 중복된 양방향 ACCEPTED 친구 관계를 모두 삭제한다")
+        void deleteFriend_deletesDuplicatedAcceptedRelationsInBothDirections() {
+            //given
+            User me = createUser(5L, "gamer@test.com", "게이머");
+            User friend = createUser(8L, "friend@test.com", "친구닉네임");
+            FriendRequest sentRelation = createFriendRequest(1L, me, friend, FriendStatus.ACCEPTED,
+                    LocalDateTime.of(2025, 1, 10, 12, 0));
+            FriendRequest receivedRelation = createFriendRequest(2L, friend, me, FriendStatus.ACCEPTED,
+                    LocalDateTime.of(2025, 1, 10, 12, 1));
+
+            //when
+            when(userRepository.findByEmail(me.getEmail())).thenReturn(Optional.of(me));
+            when(friendRequestRepository.findAcceptedRelationsBetween(me, friend.getId(), FriendStatus.ACCEPTED))
+                    .thenReturn(List.of(sentRelation, receivedRelation));
+
+            friendRequestService.deleteFriend(me.getEmail(), friend.getId());
+
+            //then
+            assertThat(sentRelation.getDeletedAt()).isNotNull();
+            assertThat(receivedRelation.getDeletedAt()).isNotNull();
+        }
+
+        @Test
+        @DisplayName("친구 관계가 아니면 Not Found 예외가 발생한다")
+        void deleteFriend_throwsNotFoundWhenRelationDoesNotExist() {
+            //given
+            User me = createUser(5L, "gamer@test.com", "게이머");
+            Long friendUserId = 8L;
+
+            //when
+            when(userRepository.findByEmail(me.getEmail())).thenReturn(Optional.of(me));
+            when(friendRequestRepository.findAcceptedRelationsBetween(me, friendUserId, FriendStatus.ACCEPTED))
+                    .thenReturn(List.of());
+
+            //then
+            assertBusinessException(
+                    () -> friendRequestService.deleteFriend(me.getEmail(), friendUserId),
+                    ErrorCode.FRIEND_RELATION_NOT_FOUND
             );
         }
     }

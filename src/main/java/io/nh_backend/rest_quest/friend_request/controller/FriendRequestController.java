@@ -112,4 +112,21 @@ public class FriendRequestController {
                 SuccessCode.FRIEND_REQUEST_CANCELED.getSuccessMessage()
         );
     }
+
+    @DeleteMapping("/api/v1/users/me/friends/{friendUserId}")
+    public ApiResponse<Void> deleteFriend(
+            Principal principal,
+            @PathVariable("friendUserId") Long friendUserId
+    ) {
+        if (principal == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "인증이 필요합니다.");
+        }
+
+        friendRequestService.deleteFriend(principal.getName(), friendUserId);
+
+        return ApiResponse.ok(
+                null,
+                SuccessCode.FRIEND_DELETED.getSuccessMessage()
+        );
+    }
 }

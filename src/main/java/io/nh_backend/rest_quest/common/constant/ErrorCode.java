@@ -26,6 +26,7 @@ public enum ErrorCode {
     FRIEND_REQUEST_DECLINE_RECEIVER_ONLY(HttpStatus.BAD_REQUEST, "본인에게 온 요청만 거절할 수 있습니다."),
     FRIEND_REQUEST_SENDER_ONLY(HttpStatus.BAD_REQUEST, "본인이 보낸 요청만 취소할 수 있습니다."),
     FRIEND_REQUEST_NOT_FOUND(HttpStatus.NOT_FOUND, "친구 요청을 찾을 수 없습니다."),
+    FRIEND_RELATION_NOT_FOUND(HttpStatus.NOT_FOUND, "친구 관계가 아닙니다."),
 
     //ITEM
     ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "아이템을 찾을 수 없습니다."),
