@@ -385,8 +385,8 @@ class UserControllerTest {
                             LocalDateTime.of(2025, 1, 1, 0, 0),
                             LocalDateTime.of(2026, 5, 21, 10, 0)
                     ),
-                    new UserProfileResponse(10, 500),
-                    new ShowWalletResponse(5000, 10),
+                    new UserProfileResponse(10, 500L),
+                    new ShowWalletResponse(5000L, 10L),
                     List.of(new UserItemResponse(
                             1L,
                             1L,
@@ -478,6 +478,75 @@ class UserControllerTest {
                     .andExpect(jsonPath("$.message").value("인증이 필요합니다."))
                     .andExpect(jsonPath("$.data").doesNotExist())
                     .andExpect(jsonPath("$.error").doesNotExist());
+        }
+
+        @Test
+        @DisplayName("INF_UNITY_023: 인증된 사용자의 프로필을 반환한다")
+        void getMyProfile_returnsProfile() throws Exception {
+            //given
+            String email = "hero@example.com";
+            UserProfileResponse response = new UserProfileResponse(10, 500L);
+
+            //when
+            when(userService.getMyProfile(email)).thenReturn(response);
+
+            mockMvc.perform(get("/api/v1/users/me/profile")
+                            .principal(() -> email))
+            //then
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.message").doesNotExist())
+                    .andExpect(jsonPath("$.data.level").value(10))
+                    .andExpect(jsonPath("$.data.exp").value(500L))
+                    .andExpect(jsonPath("$.data.totalPlaySeconds").doesNotExist())
+                    .andExpect(jsonPath("$.error").doesNotExist());
+
+            verify(userService).getMyProfile(email);
+        }
+
+        @Test
+        @DisplayName("인증되지 않은 사용자는 프로필을 조회할 수 없다")
+        void getMyProfile_returnsUnauthorizedWhenPrincipalDoesNotExist() throws Exception {
+            mockMvc.perform(get("/api/v1/users/me/profile"))
+            //then
+                    .andExpect(status().isUnauthorized())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.message").value("인증이 필요합니다."))
+                    .andExpect(jsonPath("$.data").doesNotExist());
+        }
+
+        @Test
+        @DisplayName("INF_UNITY_024: 인증된 사용자의 지갑을 반환한다")
+        void getMyWallet_returnsWallet() throws Exception {
+            //given
+            String email = "hero@example.com";
+            ShowWalletResponse response = new ShowWalletResponse(5000L, 10L);
+
+            //when
+            when(userService.getMyWallet(email)).thenReturn(response);
+
+            mockMvc.perform(get("/api/v1/users/me/wallet")
+                            .principal(() -> email))
+            //then
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.message").doesNotExist())
+                    .andExpect(jsonPath("$.data.gold").value(5000L))
+                    .andExpect(jsonPath("$.data.gem").value(10L))
+                    .andExpect(jsonPath("$.error").doesNotExist());
+
+            verify(userService).getMyWallet(email);
+        }
+
+        @Test
+        @DisplayName("인증되지 않은 사용자는 지갑을 조회할 수 없다")
+        void getMyWallet_returnsUnauthorizedWhenPrincipalDoesNotExist() throws Exception {
+            mockMvc.perform(get("/api/v1/users/me/wallet"))
+            //then
+                    .andExpect(status().isUnauthorized())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.message").value("인증이 필요합니다."))
+                    .andExpect(jsonPath("$.data").doesNotExist());
         }
     }
 

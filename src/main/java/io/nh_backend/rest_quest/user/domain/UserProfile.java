@@ -16,16 +16,16 @@ public class UserProfile {
     @Column(nullable = false)
     private Integer level;
 
-    private Integer exp = 0;
+    private Long exp = 0L;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @Builder
-    public UserProfile(Integer level, Integer exp, User user) {
+    public UserProfile(Integer level, Long exp, User user) {
         this.level = level;
-        this.exp = exp == null ? 0 : exp;
+        this.exp = exp == null ? 0L : exp;
         this.user = user;
     }
 }

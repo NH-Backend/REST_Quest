@@ -6,8 +6,10 @@ import io.nh_backend.rest_quest.user.dto.LoginRequest;
 import io.nh_backend.rest_quest.user.dto.LoginResponse;
 import io.nh_backend.rest_quest.user.dto.RefreshTokenRequest;
 import io.nh_backend.rest_quest.user.dto.RefreshTokenRotation;
+import io.nh_backend.rest_quest.user.dto.ShowWalletResponse;
 import io.nh_backend.rest_quest.user.dto.UseCreateRequest;
 import io.nh_backend.rest_quest.user.dto.UserDataResponse;
+import io.nh_backend.rest_quest.user.dto.UserProfileResponse;
 import io.nh_backend.rest_quest.user.dto.UserResponse;
 import io.nh_backend.rest_quest.user.service.UserService;
 import jakarta.validation.Valid;
@@ -79,6 +81,30 @@ public class UserController {
 
         return ApiResponse.ok(
                 userService.getMyData(principal.getName()),
+                null
+        );
+    }
+
+    @GetMapping({ "/api/v1/users/me/profile"})
+    public ApiResponse<UserProfileResponse> getMyProfile(Principal principal) {
+        if (principal == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "인증이 필요합니다.");
+        }
+
+        return ApiResponse.ok(
+                userService.getMyProfile(principal.getName()),
+                null
+        );
+    }
+
+    @GetMapping({ "/api/v1/users/me/wallet"})
+    public ApiResponse<ShowWalletResponse> getMyWallet(Principal principal) {
+        if (principal == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "인증이 필요합니다.");
+        }
+
+        return ApiResponse.ok(
+                userService.getMyWallet(principal.getName()),
                 null
         );
     }

@@ -22,8 +22,10 @@ import io.nh_backend.rest_quest.user.dto.LoginResponse;
 import io.nh_backend.rest_quest.user.dto.RefreshTokenBody;
 import io.nh_backend.rest_quest.user.dto.RefreshTokenRequest;
 import io.nh_backend.rest_quest.user.dto.RefreshTokenRotation;
+import io.nh_backend.rest_quest.user.dto.ShowWalletResponse;
 import io.nh_backend.rest_quest.user.dto.UseCreateRequest;
 import io.nh_backend.rest_quest.user.dto.UserDataResponse;
+import io.nh_backend.rest_quest.user.dto.UserProfileResponse;
 import io.nh_backend.rest_quest.user.dto.UserResponse;
 import io.nh_backend.rest_quest.user.repository.RefreshTokenRepository;
 import io.nh_backend.rest_quest.user.repository.UserProfileRepository;
@@ -348,7 +350,7 @@ class UserServiceTest {
 
             UserProfile profile = UserProfile.builder()
                     .level(10)
-                    .exp(500)
+                    .exp(500L)
                     .user(user)
                     .build();
             Wallet wallet = Wallet.builder()
@@ -397,9 +399,9 @@ class UserServiceTest {
             assertThat(response.account().createdAt()).isEqualTo(LocalDateTime.of(2025, 1, 1, 0, 0));
             assertThat(response.account().lastLoginAt()).isEqualTo(LocalDateTime.of(2026, 5, 21, 10, 0));
             assertThat(response.profile().level()).isEqualTo(10);
-            assertThat(response.profile().exp()).isEqualTo(500);
-            assertThat(response.wallet().gold()).isEqualTo(5000);
-            assertThat(response.wallet().gem()).isEqualTo(10);
+            assertThat(response.profile().exp()).isEqualTo(500L);
+            assertThat(response.wallet().gold()).isEqualTo(5000L);
+            assertThat(response.wallet().gem()).isEqualTo(10L);
             assertThat(response.inventory()).hasSize(1);
             assertThat(response.inventory().get(0).userItemId()).isEqualTo(1L);
             assertThat(response.inventory().get(0).itemId()).isEqualTo(1L);
@@ -417,6 +419,60 @@ class UserServiceTest {
             assertThat(response.friendCount()).isEqualTo(3L);
 
             verify(friendRequestRepository).countActiveFriends(user, FriendStatus.ACCEPTED);
+        }
+
+        @Test
+        @DisplayName("INF_UNITY_023: 유저의 레벨과 경험치를 조회한다")
+        void getMyProfile_returnsProfile() {
+            //given
+            User user = User.builder()
+                    .email("gamer@test.com")
+                    .password("encoded-password")
+                    .nickname("게이머")
+                    .role(Role.USER)
+                    .build();
+            UserProfile profile = UserProfile.builder()
+                    .level(10)
+                    .exp(500L)
+                    .user(user)
+                    .build();
+
+            //when
+            when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
+            when(userProfileRepository.findByUser(user)).thenReturn(Optional.of(profile));
+
+            UserProfileResponse response = userService.getMyProfile(user.getEmail());
+
+            //then
+            assertThat(response.level()).isEqualTo(10);
+            assertThat(response.exp()).isEqualTo(500L);
+        }
+
+        @Test
+        @DisplayName("INF_UNITY_024: 유저의 골드와 보석 잔액을 조회한다")
+        void getMyWallet_returnsWallet() {
+            //given
+            User user = User.builder()
+                    .email("gamer@test.com")
+                    .password("encoded-password")
+                    .nickname("게이머")
+                    .role(Role.USER)
+                    .build();
+            Wallet wallet = Wallet.builder()
+                    .gold(5000)
+                    .gem(10)
+                    .user(user)
+                    .build();
+
+            //when
+            when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
+            when(walletRepository.findByUser(user)).thenReturn(Optional.of(wallet));
+
+            ShowWalletResponse response = userService.getMyWallet(user.getEmail());
+
+            //then
+            assertThat(response.gold()).isEqualTo(5000L);
+            assertThat(response.gem()).isEqualTo(10L);
         }
     }
 

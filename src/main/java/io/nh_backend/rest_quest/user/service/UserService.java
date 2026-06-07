@@ -142,11 +142,39 @@ public class UserService {
 
         return new UserDataResponse(
                 toResponse(user),
-                new UserProfileResponse(profile.getLevel(), profile.getExp()),
-                new ShowWalletResponse(wallet.getGold(), wallet.getGem()),
+                toProfileResponse(profile),
+                toWalletResponse(wallet),
                 inventory,
                 friendCount
         );
+    }
+
+    @Transactional(readOnly = true)
+    public UserProfileResponse getMyProfile(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.UNAUTHORIZED_USER
+                ));
+        UserProfile profile = userProfileRepository.findByUser(user)
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.UNAUTHORIZED_USER
+                ));
+
+        return toProfileResponse(profile);
+    }
+
+    @Transactional(readOnly = true)
+    public ShowWalletResponse getMyWallet(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.UNAUTHORIZED_USER
+                ));
+        Wallet wallet = walletRepository.findByUser(user)
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.UNAUTHORIZED_USER
+                ));
+
+        return toWalletResponse(wallet);
     }
 
     @Transactional
@@ -228,6 +256,20 @@ public class UserService {
                 user.getProvider(),
                 user.getCreatedAt(),
                 user.getLastLoginAt()
+        );
+    }
+
+    private UserProfileResponse toProfileResponse(UserProfile profile) {
+        return new UserProfileResponse(
+                profile.getLevel(),
+                profile.getExp()
+        );
+    }
+
+    private ShowWalletResponse toWalletResponse(Wallet wallet) {
+        return new ShowWalletResponse(
+                Long.valueOf(wallet.getGold()),
+                Long.valueOf(wallet.getGem())
         );
     }
 }
