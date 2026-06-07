@@ -3,6 +3,8 @@ package io.nh_backend.rest_quest.common.eventhandler;
 import io.nh_backend.rest_quest.common.constant.ErrorCode;
 import io.nh_backend.rest_quest.common.dto.ApiResponse;
 import io.nh_backend.rest_quest.common.exception.BusinessException;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -37,6 +39,7 @@ public class GlobalExceptionHandler {
                 .findFirst()
                 .map(FieldError::getDefaultMessage)
                 .orElse("잘못된 요청입니다.");
+        ErrorCode errorCode = ErrorCode.INVALID_PARAMETER;
 
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
@@ -48,6 +51,17 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(exception.getStatusCode())
                 .body(ApiResponse.fail(exception.getReason()));
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleConstraintViolationException(
+            ConstraintViolationException exception
+    ) {
+        ErrorCode errorCode = ErrorCode.INVALID_PARAMETER;
+
+        return ResponseEntity
+                .status(errorCode.getStatus())
+                .body(ApiResponse.fail(errorCode.getDescription()));
     }
 
     @ExceptionHandler(Exception.class)
