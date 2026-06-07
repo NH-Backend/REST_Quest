@@ -18,11 +18,14 @@ public record UserItemResponse(
         Integer sellPrice,
         Integer quantity,
         Boolean equipped,
-        LocalDateTime acquiredAt
-
+        String acquiredAt
 ) {
     public static UserItemResponse from(UserItem userItem) {
         Item item = userItem.getItem();
+
+        String acquiredAtStr = userItem.getAcquiredAt() != null
+                ? userItem.getAcquiredAt().format(java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+                : "";
 
         return new UserItemResponse(
                 userItem.getId(),
@@ -37,7 +40,7 @@ public record UserItemResponse(
                 item.getSellPrice(),
                 userItem.getQuantity(),
                 userItem.getEquipped(),
-                userItem.getAcquiredAt()
+                acquiredAtStr
         );
     }
 }

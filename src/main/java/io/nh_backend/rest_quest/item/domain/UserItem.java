@@ -1,5 +1,7 @@
 package io.nh_backend.rest_quest.item.domain;
 
+import io.nh_backend.rest_quest.common.constant.ErrorCode;
+import io.nh_backend.rest_quest.common.exception.BusinessException;
 import io.nh_backend.rest_quest.user.domain.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -43,5 +45,20 @@ public class UserItem {
 
     public void delete() {
         this.deletedAt = LocalDateTime.now();
+    }
+
+    public void addQuantity(int amount) {
+        if (amount <= 0) {
+            throw new BusinessException(ErrorCode.QUANTITY_UNDER_ONE);
+        }
+        this.quantity += amount;
+        this.acquiredAt = LocalDateTime.now();
+    }
+
+    public void decreaseQuantity(int amount) {
+        if (this.quantity < amount) {
+            throw new BusinessException(ErrorCode.ITEM_STOCK_SHORTAGE);
+        }
+        this.quantity -= amount;
     }
 }

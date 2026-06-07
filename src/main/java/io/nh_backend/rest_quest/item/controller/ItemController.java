@@ -4,8 +4,10 @@ import io.nh_backend.rest_quest.common.constant.SuccessCode;
 import io.nh_backend.rest_quest.common.dto.ApiResponse;
 import io.nh_backend.rest_quest.item.dto.ItemResponse;
 import io.nh_backend.rest_quest.item.service.ItemService;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,6 +17,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
+@Validated
 @RequestMapping("/api/v1/items")
 public class ItemController {
 
@@ -29,7 +32,7 @@ public class ItemController {
     }
 
     @GetMapping("/{id}")
-    public ApiResponse<ItemResponse> getItemById(@PathVariable("id") Long id) {
+    public ApiResponse<ItemResponse> getItemById(@PathVariable("id") @Positive Long id) {
         return ApiResponse.ok(
                 itemService.getItemById(id), SuccessCode.ITEM_READ_SINGLE.getSuccessMessage()
         );

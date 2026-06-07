@@ -400,7 +400,7 @@ class UserControllerTest {
                             50,
                             1,
                             true,
-                            LocalDateTime.of(2025, 1, 1, 0, 0)
+                            "2025-01-01T00:00:00"
                     )),
                     3L
             );
