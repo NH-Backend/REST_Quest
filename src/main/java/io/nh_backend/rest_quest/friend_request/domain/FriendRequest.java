@@ -46,4 +46,17 @@ public class FriendRequest {
     public void delete() {
         this.deletedAt = LocalDateTime.now();
     }
+
+    public void accept() {
+        this.status = FriendStatus.ACCEPTED;
+    }
+
+    public void decline() {
+        this.status = FriendStatus.DECLINED;
+    }
+
+    public void cancel() {
+        this.status = FriendStatus.CANCELED;
+        delete();
+    }
 }
