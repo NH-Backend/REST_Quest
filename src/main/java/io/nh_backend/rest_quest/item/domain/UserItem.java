@@ -56,6 +56,9 @@ public class UserItem {
     }
 
     public void decreaseQuantity(int amount) {
+        if (amount <= 0) {
+            throw new BusinessException(ErrorCode.QUANTITY_UNDER_ONE);
+        }
         if (this.quantity < amount) {
             throw new BusinessException(ErrorCode.ITEM_STOCK_SHORTAGE);
         }

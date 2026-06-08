@@ -1,4 +1,4 @@
-package io.nh_backend.rest_quest.item.dto;
+package io.nh_backend.rest_quest.npc.dto;
 
 import io.nh_backend.rest_quest.item.domain.Item;
 import io.nh_backend.rest_quest.item.domain.UserItem;
