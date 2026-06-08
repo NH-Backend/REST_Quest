@@ -29,7 +29,8 @@ public enum SuccessCode {
 
     //npc
     NPC_LIST_READ("NPC 목록을 조회했습니다."),
-    NPC_DETAIL_READ("NPC를 조회했습니다.");
+    NPC_DETAIL_READ("NPC를 조회했습니다."),
+    NPC_ITEM_PURCHASE_SUCCESS("구매가 완료되었습니다.");
 
     private final String successMessage;
 }

@@ -41,6 +41,8 @@ public enum ErrorCode {
     SHOP_STOCK_SHORTAGE(HttpStatus.BAD_REQUEST, "상점 재고가 부족합니다."),
     INVALID_GACHA_ITEM(HttpStatus.BAD_REQUEST, "뽑기 아이템이 아닙니다."),
     GACHA_REWARD_NOT_FOUND(HttpStatus.NOT_FOUND, "뽑기 보상 아이템을 찾을 수 없습니다."),
+    INSUFFICIENT_GOLD(HttpStatus.BAD_REQUEST, "골드가 부족합니다."),
+    INSUFFICIENT_GEM(HttpStatus.BAD_REQUEST, "소지 보석이 부족합니다."),
 
     //WALLET / PROFILE
     WALLET_NOT_FOUND(HttpStatus.NOT_FOUND, "지갑을 찾을 수 없습니다."),
@@ -51,8 +53,6 @@ public enum ErrorCode {
 
     //common
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버오류가 발생했습니다.");
-
-
 
     private final HttpStatus status;
     private final String description;

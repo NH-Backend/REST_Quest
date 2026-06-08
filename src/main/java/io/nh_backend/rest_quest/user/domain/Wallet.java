@@ -15,7 +15,7 @@ public class Wallet {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Integer gold = 30000;
+    private Integer gold = 3000;
 
     private Integer gem = 100;
 
@@ -28,6 +28,26 @@ public class Wallet {
         this.gold = gold == null ? 3000 : gold;
         this.gem = gem == null ? 100 : gem;
         this.user = user;
+    }
+     
+    /**
+     * 골드 재화 검증 및 차감 도메인 메서드
+     */
+    public void consumeGold(int amount) {
+        if (this.gold < amount) {
+            throw new BusinessException(ErrorCode.INSUFFICIENT_GOLD);
+        }
+        this.gold -= amount;
+    }
+
+    /**
+     * 보석 재화 검증 및 차감 도메인 메서드 (뽑기/프리미엄 대비)
+     */
+    public void consumeGem(int amount) {
+        if (this.gem < amount) {
+            throw new BusinessException(ErrorCode.INSUFFICIENT_GEM);
+        }
+        this.gem -= amount;
     }
 
     public void pay(Integer goldPrice, Integer gemPrice) {
@@ -58,3 +78,5 @@ public class Wallet {
         }
     }
 }
+   
+
