@@ -40,7 +40,9 @@ public enum ErrorCode {
 
     //npc
     SHOP_STOCK_SHORTAGE(HttpStatus.BAD_REQUEST, "상점 재고가 부족합니다."),
-    NPC_NOT_FOUND(HttpStatus.NOT_FOUND, "NPC를 찾을 수 없습니다.");
+    NPC_NOT_FOUND(HttpStatus.NOT_FOUND, "NPC를 찾을 수 없습니다."),
+    INSUFFICIENT_GOLD(HttpStatus.BAD_REQUEST, "골드가 부족합니다."),
+    INSUFFICIENT_GEM(HttpStatus.BAD_REQUEST, "소지 보석이 부족합니다.");
 
     private final HttpStatus status;
     private final String description;
