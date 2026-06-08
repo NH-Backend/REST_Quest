@@ -13,7 +13,7 @@ public record NpcShopItemResponse(
         String itemGrade,   // COMMON, EPIC 등
         String description,
         Integer gemPrice,   // 명세서 026번 기준 가격 2종 수용
-        Integer goldPrice,
+        Integer price,
         Integer sellPrice,
         Integer quantity,   // 상점 내 남은 재고 수량
         Integer sortOrder   // 정렬 순서

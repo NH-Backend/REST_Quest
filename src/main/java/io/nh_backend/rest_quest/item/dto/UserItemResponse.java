@@ -13,7 +13,7 @@ public record UserItemResponse(
         String itemType,
         String itemGrade,
         String description,
-        Integer goldPrice,
+        Integer price,
         Integer gemPrice,
         Integer sellPrice,
         Integer quantity,
