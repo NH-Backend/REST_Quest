@@ -3,11 +3,14 @@ package io.nh_backend.rest_quest.friend_request.repository;
 import io.nh_backend.rest_quest.friend_request.domain.FriendRequest;
 import io.nh_backend.rest_quest.friend_request.domain.FriendStatus;
 import io.nh_backend.rest_quest.user.domain.User;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface FriendRequestRepository extends JpaRepository<FriendRequest, Long> {
     @Query("""
@@ -38,6 +41,25 @@ public interface FriendRequestRepository extends JpaRepository<FriendRequest, Lo
     );
 
     List<FriendRequest> findAllByToUserAndStatusAndDeletedAtIsNull(User toUser, FriendStatus status);
+
+    Optional<FriendRequest> findByIdAndDeletedAtIsNull(Long id);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    Optional<FriendRequest> findByIdAndStatusAndDeletedAtIsNull(Long id, FriendStatus status);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    Optional<FriendRequest> findByIdAndToUserAndStatusAndDeletedAtIsNull(
+            Long id,
+            User toUser,
+            FriendStatus status
+    );
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    Optional<FriendRequest> findByIdAndFromUserAndStatusAndDeletedAtIsNull(
+            Long id,
+            User fromUser,
+            FriendStatus status
+    );
 
     @Query("""
             select friendRequest

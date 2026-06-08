@@ -274,20 +274,20 @@ class FriendRequestControllerTest {
 
         @Test
         @DisplayName("본인에게 온 요청만 수락할 수 있다")
-        void acceptFriendRequest_returnsBadRequestWhenNotReceiver() throws Exception {
+        void acceptFriendRequest_returnsNotFoundWhenNotReceiver() throws Exception {
             //given
             String email = "gamer@test.com";
 
             //when
             when(friendRequestService.acceptFriendRequest(email, 2L))
-                    .thenThrow(new BusinessException(ErrorCode.FRIEND_REQUEST_RECEIVER_ONLY));
+                    .thenThrow(new BusinessException(ErrorCode.FRIEND_REQUEST_NOT_FOUND));
 
             mockMvc.perform(post("/api/v1/users/me/friends/requests/2/accept")
                             .principal(() -> email))
             //then
-                    .andExpect(status().isBadRequest())
+                    .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.success").value(false))
-                    .andExpect(jsonPath("$.message").value(ErrorCode.FRIEND_REQUEST_RECEIVER_ONLY.getDescription()))
+                    .andExpect(jsonPath("$.message").value(ErrorCode.FRIEND_REQUEST_NOT_FOUND.getDescription()))
                     .andExpect(jsonPath("$.data").doesNotExist());
         }
     }
@@ -316,20 +316,20 @@ class FriendRequestControllerTest {
 
         @Test
         @DisplayName("본인에게 온 요청만 거절할 수 있다")
-        void declineFriendRequest_returnsBadRequestWhenNotReceiver() throws Exception {
+        void declineFriendRequest_returnsNotFoundWhenNotReceiver() throws Exception {
             //given
             String email = "gamer@test.com";
 
             //when
-            doThrow(new BusinessException(ErrorCode.FRIEND_REQUEST_DECLINE_RECEIVER_ONLY))
+            doThrow(new BusinessException(ErrorCode.FRIEND_REQUEST_NOT_FOUND))
                     .when(friendRequestService).declineFriendRequest(email, 2L);
 
             mockMvc.perform(post("/api/v1/users/me/friends/requests/2/decline")
                             .principal(() -> email))
             //then
-                    .andExpect(status().isBadRequest())
+                    .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.success").value(false))
-                    .andExpect(jsonPath("$.message").value(ErrorCode.FRIEND_REQUEST_DECLINE_RECEIVER_ONLY.getDescription()))
+                    .andExpect(jsonPath("$.message").value(ErrorCode.FRIEND_REQUEST_NOT_FOUND.getDescription()))
                     .andExpect(jsonPath("$.data").doesNotExist());
         }
     }
@@ -358,20 +358,20 @@ class FriendRequestControllerTest {
 
         @Test
         @DisplayName("본인이 보낸 요청만 취소할 수 있다")
-        void cancelFriendRequest_returnsBadRequestWhenNotSender() throws Exception {
+        void cancelFriendRequest_returnsNotFoundWhenNotSender() throws Exception {
             //given
             String email = "gamer@test.com";
 
             //when
-            doThrow(new BusinessException(ErrorCode.FRIEND_REQUEST_SENDER_ONLY))
+            doThrow(new BusinessException(ErrorCode.FRIEND_REQUEST_NOT_FOUND))
                     .when(friendRequestService).cancelFriendRequest(email, 3L);
 
             mockMvc.perform(delete("/api/v1/users/me/friends/requests/3")
                             .principal(() -> email))
             //then
-                    .andExpect(status().isBadRequest())
+                    .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.success").value(false))
-                    .andExpect(jsonPath("$.message").value(ErrorCode.FRIEND_REQUEST_SENDER_ONLY.getDescription()))
+                    .andExpect(jsonPath("$.message").value(ErrorCode.FRIEND_REQUEST_NOT_FOUND.getDescription()))
                     .andExpect(jsonPath("$.data").doesNotExist());
         }
     }
