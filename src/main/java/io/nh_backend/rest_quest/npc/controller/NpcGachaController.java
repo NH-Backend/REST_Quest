@@ -2,7 +2,7 @@ package io.nh_backend.rest_quest.npc.controller;
 
 import io.nh_backend.rest_quest.common.constant.SuccessCode;
 import io.nh_backend.rest_quest.common.dto.ApiResponse;
-import io.nh_backend.rest_quest.item.dto.GachaResponse;
+import io.nh_backend.rest_quest.npc.dto.GachaResponse;
 import io.nh_backend.rest_quest.npc.service.NpcGachaService;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;

@@ -4,7 +4,7 @@ import io.nh_backend.rest_quest.item.domain.Item;
 import io.nh_backend.rest_quest.item.domain.ItemGrade;
 import io.nh_backend.rest_quest.item.domain.ItemType;
 import io.nh_backend.rest_quest.item.domain.UserItem;
-import io.nh_backend.rest_quest.item.dto.GachaResponse;
+import io.nh_backend.rest_quest.npc.dto.GachaResponse;
 import io.nh_backend.rest_quest.item.repository.ItemRepository;
 import io.nh_backend.rest_quest.item.repository.UserItemRepository;
 import io.nh_backend.rest_quest.npc.domain.Npc;

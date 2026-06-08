@@ -2,6 +2,7 @@ package io.nh_backend.rest_quest.npc.dto;
 
 import io.nh_backend.rest_quest.item.domain.Item;
 import io.nh_backend.rest_quest.item.domain.UserItem;
+import io.nh_backend.rest_quest.item.dto.UserItemResponse;
 import io.nh_backend.rest_quest.user.domain.UserProfile;
 import io.nh_backend.rest_quest.user.domain.Wallet;
 
