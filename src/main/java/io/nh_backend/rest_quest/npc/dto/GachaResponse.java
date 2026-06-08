@@ -1,10 +1,9 @@
-package io.nh_backend.rest_quest.item.dto;
+package io.nh_backend.rest_quest.npc.dto;
 
 import io.nh_backend.rest_quest.item.domain.Item;
 import io.nh_backend.rest_quest.item.domain.ItemGrade;
 import io.nh_backend.rest_quest.item.domain.ItemType;
 import io.nh_backend.rest_quest.user.domain.Wallet;
-import jakarta.persistence.Column;
 
 public record GachaResponse(
         Wallet wallet,
