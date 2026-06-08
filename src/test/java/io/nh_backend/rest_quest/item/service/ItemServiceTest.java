@@ -98,7 +98,7 @@ class ItemServiceTest {
                 Assertions.assertThat(result).isNotNull();
                 Assertions.assertThat(result.itemName()).isEqualTo("연습용 검");
 
-                Assertions.assertThat(result.goldPrice()).isEqualTo(100);
+                Assertions.assertThat(result.price()).isEqualTo(100);
                 Assertions.assertThat(result.gemPrice()).isEqualTo(0);
 
                 then(itemRepository).should().findById(targetId);

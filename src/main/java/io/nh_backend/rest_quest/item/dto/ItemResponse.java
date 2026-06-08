@@ -14,7 +14,7 @@ public record ItemResponse(
         String itemType,
         String itemGrade,
         String description,
-        Integer goldPrice,
+        Integer price,
         Integer gemPrice,
         Integer sellPrice
 ) {
@@ -26,7 +26,7 @@ public record ItemResponse(
                 .itemType(item.getItemType().name())
                 .itemGrade(item.getItemGrade().name())
                 .description(item.getDescription())
-                .goldPrice(item.getGoldPrice())
+                .price(item.getGoldPrice())
                 .gemPrice(item.getGemPrice())
                 .sellPrice(item.getSellPrice())
                 .build();

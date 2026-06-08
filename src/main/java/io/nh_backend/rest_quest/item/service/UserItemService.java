@@ -110,7 +110,7 @@ public class UserItemService {
                 userItem.getItem().getItemType().name(),    // itemType
                 userItem.getItem().getItemGrade().name(),   // itemGrade
                 userItem.getItem().getDescription(),        // description
-                userItem.getItem().getGoldPrice(),          // goldPrice
+                userItem.getItem().getGoldPrice(),          // price
                 userItem.getItem().getGemPrice(),           // gemPrice
                 userItem.getItem().getSellPrice(),          // sellPrice
                 userItem.getQuantity(),                     // quantity
