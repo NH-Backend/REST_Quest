@@ -48,3 +48,19 @@ VALUES
 (5, 2, 1, 999, 1), -- 연습용 검 (item id: 1, 재고 999개, 1번 슬롯 배치)
 (6, 2, 3, 20, 3),  -- 녹슨 철검 (item id: 3, 재고 20개, 3번 슬롯 배치)
 (7, 2, 2, 50, 2);  -- 초보자 검 (item id: 2, 재고 50개, 2번 슬롯 배치)
+
+INSERT INTO npcs (
+    id,
+    r_id,
+    name,
+    description,
+    location_key,
+    active
+) VALUES (
+             29001,
+             'gachanpc',
+             '테스트 뽑기 NPC',
+             'INF_UNITY_029~032 Postman 테스트용 뽑기 NPC입니다.',
+             'test_gacha_zone',
+             true
+         );
