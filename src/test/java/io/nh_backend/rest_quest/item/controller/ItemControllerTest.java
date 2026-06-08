@@ -57,12 +57,12 @@ class ItemControllerTest {
                         ItemResponse.builder()
                                 .itemId(1L).rId("sword_001").itemName("연습용 검이다.")
                                 .itemType("WEAPON").itemGrade("COMMON").description("설명")
-                                .goldPrice(100).gemPrice(0).sellPrice(50)
+                                .price(100).gemPrice(0).sellPrice(50)
                                 .build(),
                         ItemResponse.builder()
                                 .itemId(2L).rId("sword_002").itemName("초보자용 검이다.")
                                 .itemType("WEAPON").itemGrade("COMMON").description("설명")
-                                .goldPrice(200).gemPrice(0).sellPrice(100)
+                                .price(200).gemPrice(0).sellPrice(100)
                                 .build()
                 );
                 given(itemService.getAllItems()).willReturn(mockList);
@@ -80,9 +80,9 @@ class ItemControllerTest {
                         .andExpect(jsonPath("$.data").isArray())
                         .andExpect(jsonPath("$.data.length()").value(2))
                         .andExpect(jsonPath("$.data[0].itemId").value(1L))
-                        .andExpect(jsonPath("$.data[0].goldPrice").value(100))
+                        .andExpect(jsonPath("$.data[0].price").value(100))
                         .andExpect(jsonPath("$.data[1].itemId").value(2L))
-                        .andExpect(jsonPath("$.data[1].goldPrice").value(200));
+                        .andExpect(jsonPath("$.data[1].price").value(200));
 
                 then(itemService).should().getAllItems();
             }
@@ -105,7 +105,7 @@ class ItemControllerTest {
                 ItemResponse mockResponse = ItemResponse.builder()
                         .itemId(validId).rId("sword_001").itemName("연습용 검")
                         .itemType("WEAPON").itemGrade("COMMON").description("설명")
-                        .goldPrice(100).gemPrice(0).sellPrice(50)
+                        .price(100).gemPrice(0).sellPrice(50)
                         .build();
                 given(itemService.getItemById(validId)).willReturn(mockResponse);
 
@@ -120,7 +120,7 @@ class ItemControllerTest {
                         .andExpect(jsonPath("$.success").value(true))
                         .andExpect(jsonPath("$.message").value(SuccessCode.ITEM_READ_SINGLE.getSuccessMessage()))
                         .andExpect(jsonPath("$.data.itemId").value(validId))
-                        .andExpect(jsonPath("$.data.goldPrice").value(100))
+                        .andExpect(jsonPath("$.data.price").value(100))
                         .andExpect(jsonPath("$.data.gemPrice").value(0));
 
                 then(itemService).should().getItemById(validId);

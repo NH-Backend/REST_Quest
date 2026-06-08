@@ -82,7 +82,8 @@ public class SecurityConfig {
                 "/api/v1/users/me/inventory/*/unequip",
                 "/api/v1/users/me/inventory/*/use",
                 "/api/v1/users/me/inventory/pickup",
-                "/api/v1/users/me/npcs/*/items/*/purchase"
+                "/api/v1/users/me/npcs/*/items/*/purchase",
+                "/api/v1/users/me/npcs/*/items/*/gacha"
         };
 
         public static final String[] DELETE_AUTHENTICATED = {

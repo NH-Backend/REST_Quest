@@ -31,7 +31,23 @@ public enum ErrorCode {
     //ITEM
     ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "아이템을 찾을 수 없습니다."),
     ITEM_STOCK_SHORTAGE(HttpStatus.BAD_REQUEST, "아이템 수량이 부족합니다."),
-    QUANTITY_UNDER_ONE(HttpStatus.BAD_REQUEST, "지급 수량은 1개 이상이어야 합니다."),
+    QUANTITY_UNDER_ONE(HttpStatus.BAD_REQUEST, "수량은 1개 이상이어야 합니다."),
+    INSUFFICIENT_CURRENCY(HttpStatus.BAD_REQUEST, "재화가 부족합니다."),
+    REWARD_AMOUNT_INVALID(HttpStatus.BAD_REQUEST, "보상 지급량이 올바르지 않습니다."),
+
+    //NPC
+    NPC_NOT_FOUND(HttpStatus.NOT_FOUND, "NPC를 찾을 수 없습니다."),
+    NPC_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "상점 아이템을 찾을 수 없습니다."),
+    SHOP_STOCK_SHORTAGE(HttpStatus.BAD_REQUEST, "상점 재고가 부족합니다."),
+    INVALID_GACHA_ITEM(HttpStatus.BAD_REQUEST, "뽑기 아이템이 아닙니다."),
+    GACHA_REWARD_NOT_FOUND(HttpStatus.NOT_FOUND, "뽑기 보상 아이템을 찾을 수 없습니다."),
+    INSUFFICIENT_GOLD(HttpStatus.BAD_REQUEST, "골드가 부족합니다."),
+    INSUFFICIENT_GEM(HttpStatus.BAD_REQUEST, "소지 보석이 부족합니다."),
+
+    //WALLET / PROFILE
+    WALLET_NOT_FOUND(HttpStatus.NOT_FOUND, "지갑을 찾을 수 없습니다."),
+    PROFILE_NOT_FOUND(HttpStatus.NOT_FOUND, "프로필을 찾을 수 없습니다."),
+
 
     INVALID_PARAMETER(HttpStatus.BAD_REQUEST, "잘못된 요청 파라미터입니다."),
 
