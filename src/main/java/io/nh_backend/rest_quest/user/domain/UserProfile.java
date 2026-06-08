@@ -1,5 +1,7 @@
 package io.nh_backend.rest_quest.user.domain;
 
+import io.nh_backend.rest_quest.common.constant.ErrorCode;
+import io.nh_backend.rest_quest.common.exception.BusinessException;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -27,5 +29,12 @@ public class UserProfile {
         this.level = level;
         this.exp = exp == null ? 0L : exp;
         this.user = user;
+    }
+
+    public void addExp(Integer amount) {
+        if (amount == null || amount <= 0) {
+            throw new BusinessException(ErrorCode.REWARD_AMOUNT_INVALID);
+        }
+        this.exp += amount;
     }
 }
