@@ -31,23 +31,23 @@ class NpcRepositoryTest {
         class Context_has_active_npcs {
 
             @Test
-            @DisplayName("It: 순서와 무관하게 아리와 고든 엔티티를 페치조인하여 빈 가방 없이 온전히 조회한다.")
+            @DisplayName("It: 뽑기 상인을 포함하여 활성화된 모든 NPC 엔티티를 페치조인하여 온전히 조회한다.")
             void It_returns_all_active_npcs_safely() {
                 // when
                 List<Npc> result = npcRepository.findAllActiveNpcsWithShopItems();
 
                 // then
-                assertThat(result).hasSize(2);
+                assertThat(result).hasSize(3);
 
                 assertThat(result)
                         .extracting(Npc::getName)
-                        .containsExactlyInAnyOrder("잡화상인 아리", "대장장이 고든");
+                        .containsExactlyInAnyOrder("잡화상인 아리", "대장장이 고든", "테스트 뽑기 NPC");
 
                 Npc ari = result.stream().filter(n -> n.getName().equals("잡화상인 아리")).findFirst().orElseThrow();
                 Npc gordon = result.stream().filter(n -> n.getName().equals("대장장이 고든")).findFirst().orElseThrow();
 
-                assertThat(ari.getShopItems()).isNotEmpty();   // Fetch Join으로 활 카탈로그를 정상 로드했는가?
-                assertThat(gordon.getShopItems()).isNotEmpty(); // Fetch Join으로 검 카탈로그를 정상 로드했는가?
+                assertThat(ari.getShopItems()).isNotEmpty();
+                assertThat(gordon.getShopItems()).isNotEmpty();
             }
         }
     }
