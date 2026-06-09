@@ -1,0 +1,27 @@
+spring:
+  application:
+    name: REST_Quest
+  config:
+    import: optional:file:.env.development[.properties]
+  datasource:
+    url: ${dbUrl:jdbc:h2:mem:rest-quest;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE}
+    username: ${dbUserName:sa}
+    password: ${dbPassWord:}
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+custom:
+  baseUrl: ${baseUrl:http://localhost:8080}
+  jwt:
+    payload:
+      issuer: ${jwtIssuer:REST_Quest}
+      subject-access-token: ${jwtAccessSubject:ACCESS_TOKEN}
+      subject-refresh-token: ${jwtRefreshSubject:REFRESH_TOKEN}
+      audience: ${jwtAudience:REST_Quest_USER}
+    secrets:
+      app-key: ${base64UuidKey:cmVzdC1xdWVzdC1qd3Qtc2VjcmV0LWtleS1tdXN0LWJlLWxvbmc=}
+      vanilla-key: ${vanillaKey:REST_Quest}
+    validations:
+      access: ${accessTokenTime:900}
+      refresh: ${refreshTokenTime:1209600}
